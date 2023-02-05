@@ -32,6 +32,7 @@ for aa in aa_list:
     edus = []
     relations = []
     cdus = []
+    embedded_cdus = []
     
     aa_file_path = aa_path + aa
     tree = ET.parse(aa_file_path)
@@ -71,6 +72,11 @@ for aa in aa_list:
         unit_list = []
         for edu in elem.iter('embedded-unit'):
             unit_list.append(edu.attrib['id'])
+        #take account of embedded-schema -- need try catch?
+        for cdu in elem.iter('embedded-schema'):
+            unit_list.append(cdu.attrib['id'])
+            embedded_cdus.append((elem.attrib['id'], cdu.attrib['id']))
+
         schema['embedded_units'] = unit_list
         cdus.append(schema)
 
@@ -88,7 +94,6 @@ for aa in aa_list:
         relation['x'] = edu_index_dict[relation['x_id']]
         relation['y'] = edu_index_dict[relation['y_id']]
     
-
     #add text from ac file
     with open(ac_path + game_id + '.ac', 'r') as txt:
         text = txt.read().replace('\n', '')
@@ -96,9 +101,19 @@ for aa in aa_list:
             unit_text = text[unit['start_pos']:unit['end_pos']]
             unit['text'] = unit_text
 
+    #add embedded CDUs if there are any
+    final_embed = []
+    if len(embedded_cdus) > 0:
+        for cdu in embedded_cdus:
+            embed_dict = {}
+            embed_dict['parent_id'] = cdu[0]
+            embed_dict['child_id'] = cdu[1]
+            final_embed.append(embed_dict)
+
     game['edus'] = edus
     game['relations'] = relations
     game['cdus'] = cdus
+    game['embedded_cdus'] = final_embed
     all_games.append(game)
     print("finished game ", game_id)
 
