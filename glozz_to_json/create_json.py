@@ -12,10 +12,15 @@ annotation_level = 'BRONZE' #whichever level
 current_folder=os.getcwd()
 
 #if these folders don't exist in directory change paths accordingly
-aa_path = current_folder + '/aa_files/'
+# aa_path = current_folder + '/aa_files/'
 ac_path = current_folder + '/ac_files/'
 
+aa_path = current_folder + '/bronze_to_check/aa_files/'
+# aa_path = '/home/kate/cocobots_annotations/bronze/'
+
 save_path= current_folder + '/json_output/'
+#save_path = '/home/kate/minecraft_corpus/flatten/json/'
+
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
 
@@ -25,13 +30,19 @@ all_games = []
 
 for aa in aa_list:
 
+    pass_flag = False
+    error_msg = None
+
     game = {}
+    game_id = ''
+    #fix this
     game_id = aa.split('.')[0]
     game['game_id'] = game_id
     print("working on game ", game_id)
+    paragraphs = []
     edus = []
     relations = []
-    cdus = []
+    cdus = []# print(e)
     embedded_cdus = []
     
     aa_file_path = aa_path + aa
@@ -39,20 +50,57 @@ for aa in aa_list:
     root = tree.getroot()
 
     count = 0
-    #get all units
+    # #get all paragraph units
+    # for elem in root.iter('unit'):
+    #     for type in elem.iter('type'):
+    #         if type.text == 'paragraph':
+    #             para = {}
+    #             para['unit_id'] = elem.attrib['id']
+    #             positions = [pos.attrib['index'] for pos in elem.iter('singlePosition')]
+    #             para['start_pos'] = int(positions[0])
+    #             para['end_pos'] = int(positions[1])
+    #             paragraphs.append(para)
+
+    # #get all edu units
+    # for elem in root.iter('unit'):
+    #     for type in elem.iter('type'):
+    #         if type.text == 'Segment':
+    #             edu = {}
+    #             edu['unit_id'] = elem.attrib['id']
+    #             for feature in elem.iter('feature'):
+    #                 edu[feature.attrib['name']] = feature.text
+    #             positions = [pos.attrib['index'] for pos in elem.iter('singlePosition')]
+    #             edu['start_pos'] = int(positions[0])
+    #             edu['end_pos'] = int(positions[1])
+    #             if edu['start_pos'] != edu['end_pos']: #skip empty edus
+    #                 edu['global_index'] = count
+    #                 count +=1 
+    #                 edus.append(edu)
+    
+    last_para_id = None
     for elem in root.iter('unit'):
         for type in elem.iter('type'):
+            if type.text == 'paragraph':
+                last_para_id = elem.attrib['id']
+                para = {}
+                para['unit_id'] = last_para_id
+                positions = [pos.attrib['index'] for pos in elem.iter('singlePosition')]
+                para['start_pos'] = int(positions[0])
+                para['end_pos'] = int(positions[1])
+                paragraphs.append(para)
             if type.text == 'Segment':
                 edu = {}
                 edu['unit_id'] = elem.attrib['id']
+                edu['para_id'] = last_para_id
                 for feature in elem.iter('feature'):
                     edu[feature.attrib['name']] = feature.text
                 positions = [pos.attrib['index'] for pos in elem.iter('singlePosition')]
                 edu['start_pos'] = int(positions[0])
                 edu['end_pos'] = int(positions[1])
-                edu['global_index'] = count
-                count +=1 
-                edus.append(edu)
+                if edu['start_pos'] != edu['end_pos']: #skip empty edus
+                    edu['global_index'] = count
+                    count +=1 
+                    edus.append(edu)
 
     #get all relations
     for elem in root.iter('relation'):
@@ -91,8 +139,18 @@ for aa in aa_list:
         count += 1
 
     for relation in relations:
-        relation['x'] = edu_index_dict[relation['x_id']]
-        relation['y'] = edu_index_dict[relation['y_id']]
+        try:
+            relation['x'] = edu_index_dict[relation['x_id']]
+            relation['y'] = edu_index_dict[relation['y_id']]
+        except KeyError as e:
+            error_msg = e
+            pass_flag = True
+    
+    if pass_flag:
+        print("relation issue in {}".format(error_msg))
+        print("skipping file.")
+        pass_flag = False
+        pass
     
     #add text from ac file
     with open(ac_path + game_id + '.ac', 'r') as txt:
@@ -109,7 +167,8 @@ for aa in aa_list:
             embed_dict['parent_id'] = cdu[0]
             embed_dict['child_id'] = cdu[1]
             final_embed.append(embed_dict)
-
+    
+    game['paras'] = paragraphs
     game['edus'] = edus
     game['relations'] = relations
     game['cdus'] = cdus
