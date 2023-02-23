@@ -12,11 +12,13 @@ annotation_level = 'BRONZE' #whichever level
 current_folder=os.getcwd()
 
 #if these folders don't exist in directory change paths accordingly
-# aa_path = current_folder + '/aa_files/'
+
 ac_path = current_folder + '/ac_files/'
 
-aa_path = current_folder + '/bronze_to_check/aa_files/'
+
+#aa_path = current_folder + '/aa_ver2_files/'
 # aa_path = '/home/kate/cocobots_annotations/bronze/'
+aa_path = '/home/kate/cocobots_annotations/bronze_checked/'
 
 save_path= current_folder + '/json_output/'
 #save_path = '/home/kate/minecraft_corpus/flatten/json/'
@@ -44,6 +46,7 @@ for aa in aa_list:
     relations = []
     cdus = []# print(e)
     embedded_cdus = []
+    speaker_dict = {} #create in case need to add speaker info
     
     aa_file_path = aa_path + aa
     tree = ET.parse(aa_file_path)
@@ -94,6 +97,8 @@ for aa in aa_list:
                 edu['para_id'] = last_para_id
                 for feature in elem.iter('feature'):
                     edu[feature.attrib['name']] = feature.text
+                    if feature.attrib['name'] == 'Speaker':
+                        speaker_dict[last_para_id] = feature.text ##add to speaker dict
                 positions = [pos.attrib['index'] for pos in elem.iter('singlePosition')]
                 edu['start_pos'] = int(positions[0])
                 edu['end_pos'] = int(positions[1])
@@ -127,6 +132,16 @@ for aa in aa_list:
 
         schema['embedded_units'] = unit_list
         cdus.append(schema)
+
+    #check for edus without Speakers (this happens when they are split manually)
+    #add speaker information
+    for edu in edus:
+        if 'Speaker' not in edu.keys():
+            #find speaker based on para id
+            edu['Speaker'] = speaker_dict[edu['para_id']]
+            edu['minecraftSegID'] = edu['unit_id'] + '_' + speaker_dict[edu['para_id']]
+            ##NB we don't add turn ids
+            print('added speaker infor to edu {} in {}'.format(edu['unit_id'], game_id))
 
     #add edu (and cdu!) indicies to relations
     edu_index_dict = {}
