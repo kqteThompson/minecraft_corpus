@@ -8,7 +8,7 @@ from genglozzsegments import get_format
 
 current_folder=os.getcwd()
 
-corpus_path = '/home/kate/cocobots_minecraft/splits_reseg/test_reseg/'
+corpus_path = '/home/kate/cocobots_minecraft/splits_reseg/kate_reseg/'
 
 save_path= current_folder + '/glozz/'
 if not os.path.isdir(save_path):
