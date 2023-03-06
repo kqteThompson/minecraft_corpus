@@ -4,13 +4,14 @@ output: folder with .aa and .ac files for glozz annotation
 '''
 import os
 from genglozzsegments import get_format
+# from gensquishglozz import get_format
 
 
 current_folder=os.getcwd()
 
-corpus_path = '/home/kate/cocobots_minecraft/splits_reseg/kate_reseg/'
+corpus_path = '/home/kate/minecraft_corpus/bert_to_glozz/texts/'
 
-save_path= current_folder + '/glozz/'
+save_path= current_folder + '/glozz_squish_test/'
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
 
@@ -26,9 +27,9 @@ for f in folder_array:
             dialogue.append(line.strip('\n'))
 
         ac_file, aa_file, dialogue_id = get_format(dialogue)
-        with open (save_path + '/' + dialogue_id + '.aa', 'w') as xml_file:
+        with open (save_path + '/' + dialogue_id + '_squish.aa', 'w') as xml_file:
             xml_file.write(aa_file)
-        with open (save_path + '/' + dialogue_id + '.ac', 'w') as text_file:
+        with open (save_path + '/' + dialogue_id + '_squish.ac', 'w') as text_file:
             text_file.write(ac_file)
         print('dialogue done', dialogue_id)
 
