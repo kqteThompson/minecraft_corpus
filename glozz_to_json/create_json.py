@@ -16,9 +16,9 @@ current_folder=os.getcwd()
 ac_path = current_folder + '/ac_files/'
 
 
-#aa_path = current_folder + '/aa_ver2_files/'
+aa_path = current_folder + '/bert_try_one/'
 # aa_path = '/home/kate/cocobots_annotations/bronze/'
-aa_path = '/home/kate/cocobots_annotations/bronze_checked/'
+#aa_path = '/home/kate/cocobots_annotations/bronze_checked/'
 
 save_path= current_folder + '/json_output/'
 #save_path = '/home/kate/minecraft_corpus/flatten/json/'

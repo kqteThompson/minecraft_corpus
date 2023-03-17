@@ -191,11 +191,10 @@ def get_format(game):
 
         xml_start.extend(seg_xml)
 
-
     #now add relations to xml
     for rel in game['relations']:
-        source = edu_id_dict[rel['x']]
-        target = edu_id_dict[rel['y']]
+        source = edu_id_dict[str(rel['x'])]
+        target = edu_id_dict[str(rel['y'])]
         reltype = rel['type']
         rel_xml = create_rel_xml(source, target, reltype)
         xml_start.extend(rel_xml)

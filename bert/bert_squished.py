@@ -1,6 +1,7 @@
 """
 Takes a json file of bert formatted games and returns a json ready for BERT 
 in which consecutive System moves are combined in a single edu
+!!!
 !!NB this is a throwaway script because it doesn't take into account labeled data 
 WIP figure out what do do about the relations in this case.
 """
@@ -13,9 +14,9 @@ def text_replace(text):
     colors  = ['red', 'blue', 'green', 'orange', 'yellow', 'purple', 'black']
     color = re.findall(r"\b({})\b".format('|'.join(colors)), text, flags=re.IGNORECASE)
     if 'puts' in text:
-        replacement = 'puts down a {} block.'.format(color[0])
+        replacement = 'puts down {} block.'.format(color[0])
     else:
-        replacement = 'picks up a {} block.'.format(color[0])
+        replacement = 'picks up {} block.'.format(color[0])
     return replacement
 
 current_folder=os.getcwd()
