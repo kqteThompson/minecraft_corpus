@@ -15,13 +15,9 @@ current_folder=os.getcwd()
 
 ac_path = current_folder + '/ac_files/'
 
-
-aa_path = current_folder + '/bert_try_one/'
-# aa_path = '/home/kate/cocobots_annotations/bronze/'
-#aa_path = '/home/kate/cocobots_annotations/bronze_checked/'
+aa_path = current_folder + '/silver_to_check/'
 
 save_path= current_folder + '/json_output/'
-#save_path = '/home/kate/minecraft_corpus/flatten/json/'
 
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
@@ -198,10 +194,3 @@ with open(save_path + annotation_level + '_' + now + '.json', 'w') as outfile:
     json.dump(all_games, outfile)
 
 print('json saved')
-
-
-
-
-    
-
-

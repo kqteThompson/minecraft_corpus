@@ -7,7 +7,7 @@ import os
 from genglozzsegments import get_format
 import json
 
-predicted_relations = '2023-03-17BRONZE_dev_bert.json'
+predicted_relations = '2023-03-22BRONZE_dev_bert.json'
 
 current_folder=os.getcwd()
 

@@ -1,10 +1,29 @@
 """
 Takes a json files of ANNOTATED games and returns a json with squished & flattened games
+Grosso modo:
+1. For each EDU, if speaker == 'System', replace the text with simplified move text
+2. For each CDU, if it is a builder moves CDU: 
+    2.1. Find the last EDU, creating a *replacements* dict that maps CDU ids to last id
+    2.2. For each EDU, if there is an outgoing link, add EDU id : last id to *replacements*
+    AND add dangler ids to *targets* dict to change start position of edu (so they go below the action block)
+    AND add all outgoing links from the CDU itself to the *cdu_outgoing* dict, so that
+    if the target EDU is "within" the CDU, it will be moved below.
+    2.3. For each EDU that is not the last, gather the text and squish into one block
+    and assign to the last edu by adding to the dict *squish*, mapping last id : squish text
+    2.4. Add all non-last EDU ids to the *redundant* list to be removed 
+3. For each CDU, if it is not a builder moves CDU:
+    3.1 Find the head EDU
+    3.2 For every head EDU, add CDU id : head id
+4. Go through and do all replacements
+
+NB: the output of this script is only useful as an input to a BERT formatting script.
+If you want to visualize with GLOZZ, BERT format then to BERT to GLOZZ formatting.
 """
 import os 
 import json 
 import re
 import datetime
+from collections import defaultdict
 
 current_folder=os.getcwd()
 
@@ -36,79 +55,118 @@ def text_replace(text):
     return replacement
 
 def squish_text(elements):
-    text = []
     elements.sort(key = lambda x :x[1])
     squished = ''.join([s[3] for s in elements])
     return squished 
 
 for f in json_files:
-    if f == 'BRONZE_2023-03-17.json':
-        with open(open_path + f, 'r') as jf:
-            jfile = json.load(jf)
-            for game in jfile:
-                print(game['game_id'])
-                replacements = {}
-                squish = {}
-                redundant = []
-                #STEP 0: change all builder text in system moves
-                for edu in game['edus']:
-                    if edu['Speaker'] == 'System':
-                        edu['text'] = text_replace(edu['text'])
+    with open(open_path + f, 'r') as jf:
+        jfile = json.load(jf)
+        for game in jfile:
+            print(game['game_id'])
+            replacements = {}
+            squish = {}
+            redundant = []
+            targets = {}
+            cdu_outgoing = {}
+            #STEP 0: change all builder text in system moves
+            for edu in game['edus']:
+                if edu['Speaker'] == 'System':
+                    edu['text'] = text_replace(edu['text'])
 
-                #STEP 1: pull elements from each CDU and find head edu
-                #map cdu id to head element id
-
-                edus = [(e['unit_id'], e['start_pos'], e['Speaker'], e['text']) for e in game['edus']]
-                cdus = game['cdus']
+            #STEP 1: pull elements from each CDU 
+            edus = [(e['unit_id'], e['start_pos'], e['Speaker'], e['text']) for e in game['edus']]
+            cdus = game['cdus']
+            
+            for cdu in cdus:
+                cid = cdu['schema_id']
+                elements = [elem for elem in edus if elem[0] in cdu['embedded_units']]
                 
-                for cdu in cdus:
-                    cid = cdu['schema_id']
-                    print(cid)
-                    elements = [elem for elem in edus if elem[0] in cdu['embedded_units']]
+                #STEP 2: check CDU components are all builder moves
+                if cdu_contents(elements):
+                    last = max(elements, key=lambda tup: tup[1])
+                    tail = last[0]
+                    tail_position = last[1] #record this to move position of danglers
+                    #STEP 2.1: map cid to tail id in replacements dict
+                    replacements[cid] = tail
+
+                    #STEP 2.2: check if any of the elements has outgoing links (assume no incoming)
+                    #these are "danglers"
+                    outgoing_links = defaultdict(list)
+                    #use default dict for cases where more than one dangler per edu
+                    for rel in game['relations']:
+                        outgoing_links[rel['x_id']].append(rel['y_id'])
+
+                    pos = int(tail_position)
+                    counter = 1
+                    for e in elements:
+                        if e[0] in outgoing_links.keys(): 
+                            for target in outgoing_links[e[0]]:
+                                targets[target] = pos + counter
+                                counter += 1
+                            #for any danglers, 
+                            #change the target edu positions (to be just below)
+                            #then save mapping x node of link to tail in replacements
+                            replacements[e[0]] = tail
+
+                    #make sure all outgoing links from a CDU itself 
+                    # which are WITHIN the CDU
+                    # are moved to the bottom of the action block
+
+                    if cid in outgoing_links.keys():
+                        for target in outgoing_links[cid]:
+                            cdu_outgoing[target] = (int(tail_position), pos + counter)
+                            counter += 1
+                        
+                    #STEP 2.3: then move all text to tail node and 
+                    # put other other edu elements in array to delete
+                    new_tail_text = squish_text(elements)
+                    squish[tail] = new_tail_text
+                    for e in elements:
+                        if e[0] != tail:
+                            redundant.append(e[0]) 
+                #STEP 3: if not components builder moves:
+                else:
                     first = min(elements, key=lambda tup: tup[1])
                     head = first[0]
+                    #STEP 3.1: map cid to head id in replacements dict
                     replacements[cid] = head
-                    #STEP 2: check CDU components are all builder moves
-                    if cdu_contents(elements):
-                        #STEP 2.1: check if any of the elements has outgoing links (assume no incoming)
-                        #if so, move x node of link to head?
-                        outgoing_links = [r['x_id'] for r in game['relations']]
-                        for e in elements:
-                            if e[0] in outgoing_links:
-                                replacements[e[0]] = head
-                        #STEP 2.2: then move all text to head node and erase other edu elements
-                        new_head_text = squish_text(elements)
-                        squish[head] = new_head_text
-                        for e in elements:
-                            if e[0] != head:
-                                redundant.append(e[0])
-                        # redundant.extend([e[0] for e in elements if e[0] != head])
 
-                #STEP 3: once you have your replacements, replace relation nodes
-                for rel in game['relations']:
-                    if rel['x_id'] in replacements:
-                        rel['x_id'] = replacements[rel['x_id']]
-                    if rel['y_id'] in replacements:
-                        rel['y_id'] = replacements[rel['y_id']]
-                #add squish text to head edu and remove other nodes
-                new_edus = []
-                for edu in game['edus']:
-                    if edu['unit_id'] in squish.keys():
-                        edu['text'] = squish[edu['unit_id']]
-                        new_edus.append(edu)
-                    elif edu['unit_id'] in redundant:
-                        continue
-                    else:
-                        new_edus.append(edu)
+            #STEP 4: once we have all replacements, replace ids in relation nodes
+            for rel in game['relations']:
+                if rel['x_id'] in replacements:
+                    rel['x_id'] = replacements[rel['x_id']]
+                if rel['y_id'] in replacements:
+                    rel['y_id'] = replacements[rel['y_id']]
+            #add squish text to tail edu and remove other nodes
+            #NB: we remove by creating a new edu array
+            new_edus = []
+            for edu in game['edus']:
+                if edu['unit_id'] in squish.keys():
+                    edu['text'] = squish[edu['unit_id']]
+                    new_edus.append(edu)
+                elif edu['unit_id'] in redundant:
+                    continue
+                elif edu['unit_id'] in targets.keys():
+                    edu['start_pos'] = targets[edu['unit_id']]
+                    new_edus.append(edu)
+                elif edu['unit_id'] in cdu_outgoing.keys():
+                    #check that the unit is "within" CDU 
+                    #and if so change position of the edu
+                    if edu['end_pos'] <= cdu_outgoing[edu['unit_id']][0]:
+                        edu['start_pos'] = cdu_outgoing[edu['unit_id']][1]
+                    new_edus.append(edu)
+                else:
+                    new_edus.append(edu)
 
-                #replace edus field
-                game['edus'] = new_edus
-                #remove cdu field
-                game['cdus'] = []
-                #remove para field 
-                game['paras'] = []
-                #remove embedded cdus
-                game['embedded_cdus'] = []
+            #replace edus field
+            game['edus'] = new_edus
+            #remove cdu field
+            game['cdus'] = []
+            #remove para field 
+            game['paras'] = []
+            #remove embedded cdus
+            game['embedded_cdus'] = []
 
 ##re-save a new json
 now = datetime.datetime.now().strftime("%Y-%m-%d")

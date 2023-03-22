@@ -30,9 +30,11 @@ for f in json_files:
             game_dict = {}
             #get id
             game_dict['id'] = game['game_id']
-            
+            print(game['game_id'])
             edus = []
-            for elem in game['edus']:
+            sorted_edus = sorted(game['edus'], key=lambda d: d['start_pos']) 
+            #sort the edus so that they are sure to be in the correct order
+            for elem in sorted_edus:
                 edict = {k: v for k, v in elem.items() if k in ['text', 'Speaker']}
                 edict['speaker'] = edict.pop('Speaker')
                 #change builder and speaker 
@@ -44,7 +46,7 @@ for f in json_files:
             if with_relations:
                 index_dict = {}
                 counter = 0
-                for elem in game['edus']:
+                for elem in sorted_edus:
                     # index_dict[elem['unit_id']] = elem['global_index'] ##but these might be out of order!!
                     index_dict[elem['unit_id']] = counter
                     counter += 1

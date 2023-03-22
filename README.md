@@ -21,6 +21,7 @@ Then look at logs to see which games have issues
 
 
 ## to create BERT data from games.json
+1. NB: always make sure that you order the EDUS by position number (they may be out of order from hand splits)
 
 ## How to flatten and squish an annotated GLOZZ file for BERT
 1. Convert glozz file to json --> /glozz_to_json/create_json.py
