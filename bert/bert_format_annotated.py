@@ -9,8 +9,8 @@ import datetime
 
 current_folder=os.getcwd()
 
-# open_path = current_folder + '/json_in/'
-open_path = '/home/kate/minecraft_corpus/flatten/json_squishflat/'
+open_path = current_folder + '/json_in/'
+# open_path = '/home/kate/minecraft_corpus/flatten/json_squishflat/'
 
 save_path= current_folder + '/json_out/'
 
@@ -21,7 +21,8 @@ builder_names_replace = 1
 split = 'dev'
 annotation_level = 'SILVER'
 
-for f in [j for j in json_files if j == '2023-04-16_squish_flat.json']: #!!!!
+# for f in [j for j in json_files if j == '2023-04-17_squish_flat.json']: #!!!!
+for f in json_files:
     output_list = []
     with open(open_path + f, 'r') as jf:
         jfile = json.load(jf)

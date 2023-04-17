@@ -54,6 +54,16 @@ def text_replace(text):
         replacement = 'picks up {} block. '.format(color[0])
     return replacement
 
+def text_replace_coords(text):
+    colors  = ['red', 'blue', 'green', 'orange', 'yellow', 'purple', 'black']
+    color = re.findall(r"\b({})\b".format('|'.join(colors)), text, flags=re.IGNORECASE)
+    coords = text.split('at')[1].strip(']').strip()
+    if 'puts' in text:
+        replacement = 'put down {} block at {}. '.format(color[0], coords)
+    else:
+        replacement = 'pick up {} block at {}. '.format(color[0], coords)
+    return replacement
+
 def squish_text(elements):
     elements.sort(key = lambda x :x[1])
     squished = ''.join([s[3] for s in elements])
@@ -72,7 +82,7 @@ for f in json_files:
             #STEP 0: change all builder text in system moves
             for edu in game['edus']:
                 if edu['Speaker'] == 'System':
-                    edu['text'] = text_replace(edu['text'])
+                    edu['text'] = text_replace_coords(edu['text'])
 
             #STEP 1: pull elements from each CDU 
             edus = [(e['unit_id'], e['start_pos'], e['Speaker'], e['text']) for e in game['edus']]

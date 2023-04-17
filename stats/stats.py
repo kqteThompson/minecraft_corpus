@@ -11,8 +11,11 @@ arg_parser = argparse.ArgumentParser(description='generate minecraft games stats
 arg_parser.add_argument('json_file_name', metavar='CORPFILE', help='name of json file with games')
 arg_parser.add_argument("--games", default=False, action='store_true', help='give num games') 
 arg_parser.add_argument("--relations", default=False, action='store_true', help='asdfsdf')
-arg_parser.add_argument("--parents", default=False, action='store_true', help='sadfasdf')
-arg_parser.add_argument("--corrections", default=False, action='store_true', help='sadfasdf')
+arg_parser.add_argument("--parents", default=False, action='store_true', help='returns number of edus with >1 parent')
+arg_parser.add_argument("--corrections", default=False, action='store_true', help='returns game and num correction relations')
+arg_parser.add_argument("--candidates", default=False, action='store_true', help='returns number of candidates for a particular cutoff')
+arg_parser.add_argument("--num", type=int, nargs='+', help='specify particular cutoff for --candidates arg')
+arg_parser.add_argument("--longest_rels", type=int, nargs=1, help='returns a list of relation types with len >= num')
 
 args = arg_parser.parse_args()
 
@@ -45,3 +48,13 @@ if args.relations:
     relations_stats.relations(data)
 if args.corrections:
     relations_stats.corrections(data)
+if args.parents:
+    relations_stats.parents(data)
+if args.candidates:
+    if args.num:
+        relations_stats.candidates(data, args.num)
+    else:
+        relations_stats.candidates(data)
+if args.longest_rels:
+    relations_stats.find_longest_rels(data, args.longest_rels)
+
