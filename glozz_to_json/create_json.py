@@ -8,14 +8,15 @@ import xml.etree.ElementTree as ET
 import json
 import datetime
 
-annotation_level = 'BRONZE' #whichever level
+annotation_level = 'SILVER' #whichever level
 current_folder=os.getcwd()
 
 #if these folders don't exist in directory change paths accordingly
 
 ac_path = current_folder + '/ac_files/'
 
-aa_path = current_folder + '/silver_to_check/'
+# aa_path = current_folder + '/silver_to_check/'
+aa_path = '/home/kate/cocobots_annotations/silver_checked/'
 
 save_path= current_folder + '/json_output/'
 

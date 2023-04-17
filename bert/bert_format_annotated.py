@@ -16,17 +16,16 @@ save_path= current_folder + '/json_out/'
 
 json_files = os.listdir(open_path)
 
-output_list = []
-
 with_relations = 1
-builder_names_replace = 0
+builder_names_replace = 1
 split = 'dev'
-annotation_level = 'BRONZE'
+annotation_level = 'SILVER'
 
-for f in json_files:
+for f in [j for j in json_files if j == '2023-04-16_squish_flat.json']: #!!!!
+    output_list = []
     with open(open_path + f, 'r') as jf:
         jfile = json.load(jf)
-        for game in jfile: #only use 10 games for testing purposes
+        for game in jfile:
             game_dict = {}
             #get id
             game_dict['id'] = game['game_id']
@@ -73,17 +72,18 @@ for f in json_files:
 
             output_list.append(game_dict)
 
-    print('{} {} games formatted.'.format(len(output_list), split))    
+        num_games = len(output_list)
+        print('{} {} games formatted.'.format(num_games, split))    
 
-    now = datetime.datetime.now().strftime("%Y-%m-%d")
+        now = datetime.datetime.now().strftime("%Y-%m-%d")
 
-    ##save bert json
-    save_file_name = save_path + now + annotation_level + '_' + split +'_bert.json'
-    
-    with open(save_file_name, 'w') as outfile:
-        json.dump(output_list, outfile)
+        ##save bert json
+        save_file_name = save_path + now + '_' + annotation_level + '_' + split + '_' + str(num_games) + '_bert.json'
+        
+        with open(save_file_name, 'w') as outfile:
+            json.dump(output_list, outfile)
 
-    print('json saved')
+        print('json saved')
 
             
             
