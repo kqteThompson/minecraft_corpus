@@ -21,7 +21,7 @@ builder_names_replace = 1
 split = 'dev'
 annotation_level = 'SILVER'
 
-# for f in [j for j in json_files if j == '2023-04-17_squish_flat.json']: #!!!!
+#or f in [j for j in json_files if j == '2023-04-25_squish_flat.json']: #!!!!
 for f in json_files:
     output_list = []
     with open(open_path + f, 'r') as jf:

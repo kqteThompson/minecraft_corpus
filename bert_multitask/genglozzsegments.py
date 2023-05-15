@@ -10,9 +10,13 @@ need the header to look like this:
 <unit id="minecraft_-1">
 
 '''
-import os
-import json
 import uuid 
+
+def builder_to_system(game):
+    for edu in game['edus']:
+        if 'X:' in edu['text_raw'] and 'Y:' in edu['text_raw']:
+            edu['speaker'] = 'System'
+    return game
 
 def create_rel_xml(source, target, type):
     if type == 'QAP':

@@ -25,7 +25,7 @@ split = 'dev'
 annotation_level = 'SILVER'
 
 # for f in json_files:
-for f in [j for j in json_files if j == '2023-04-17_squish_flat.json']: #!!!!
+for f in [j for j in json_files if j == '2023-05-10_squish_flat.json']: #!!!!
     with open(open_path + f, 'r') as jf:
         jfile = json.load(jf)
         for game in jfile:

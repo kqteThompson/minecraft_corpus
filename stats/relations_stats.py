@@ -67,22 +67,26 @@ def parents(data):
     #return total number, then max length of relation
     totals = []
     more_than_2 = []
+    more_than_2_totals = []
     for d in data:
         cnt = defaultdict(list)
         for rel in d['relations']:
-            cnt[rel['y']].append(rel['x'])
+            cnt[rel['y']].append(abs(rel['y']-rel['x']))
         for item in cnt.items():
             if len(item[1]) > 1:
                 totals.append(max(item[1]))
                 more_than_2.append(len(item[1]))
+            if len(item[1]) > 2:
+                more_than_2_totals.append(max(item[1]))
     print('{} instances of multi-parent edus'.format(len(totals))) 
-    print('{} relations longer than 10'.format(len([t for t in totals if t > 10])))
+    print('{} relations longer than 10 among 2 or more parents'.format(len([t for t in totals if t > 10])))
+    print('{} relations longer than 10 among 3 or more parents'.format(len([t for t in more_than_2_totals if t > 10])))
 
     # counts = Counter(totals)   
     # for item in counts.items():
     #     print('{} : {}\n'.format(item[0], item[1]))   
 
-    print('{} edus with more than 2 parents:'.format(len(more_than_2)))
+    print('{} edus with more than 1 parents:'.format(len(more_than_2)))
     more_counts = Counter(more_than_2)
     for item in more_counts.items():
         print('{} : {}'.format(item[0], item[1])) 
@@ -112,7 +116,7 @@ def candidates(data, num=None):
             print('Length of {}'.format(n))
             print('total candidates: {}'.format(sum(totals)))
             rel_rels = sum([c[1] for c in rel_lengths.items() if c[0]<= n])
-            print('total number of relations <= {}: {} // {} of total'.format(n, rel_rels, round(rel_rels/all_rels, 4)))
+            print('total number of relations <= {}: {} // {} of total relations'.format(n, rel_rels, round(rel_rels/all_rels, 4)))
     else:
         totals = []
         for d in data:

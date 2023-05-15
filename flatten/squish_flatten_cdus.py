@@ -45,23 +45,69 @@ def cdu_contents(edus):
 
     return contents
 
+def get_bert_token(coord_list):
+    """
+    takes a list of coordinates and returns a custom Bert token 3 chars long
+    """
+    xdict = {'-5': 'b', '-4': 'c', '-3': 'd', '-2': 'f', '-1': 'g', '0': 'h', 
+             '1':'j', '2':'k', '3':'l', '4':'m', '5':'n'}
+    zdict = {'-5': 'a', '-4': 'e', '-3': 'i', '-2': 'o', '-1': 'u', '0': 'p', 
+             '1':'q', '2':'r', '3':'x', '4':'y', '5':'z'}
+    token = ''
+    for c in coord_list:
+        i,j = c.split(':')
+        if i == 'X':
+            try:
+                token += xdict[j]
+            except KeyError:
+                print('issue with X coord: {}'.format(coord_list))
+                token += 'n'
+                ##for now just assume highest X coord
+        if i == 'Y':
+            token += j
+        if i == 'Z':
+            try:
+                token += zdict[j]
+            except KeyError:
+                print('issue with Z coord: {}'.format(coord_list))
+                token += 'a'
+                ##for now just assume lowest Z coord
+    return token 
+
 def text_replace(text):
-    colors  = ['red', 'blue', 'green', 'orange', 'yellow', 'purple', 'black']
+    colors  = ['red', 'blue', 'green', 'orange', 'yellow', 'purple']
     color = re.findall(r"\b({})\b".format('|'.join(colors)), text, flags=re.IGNORECASE)
     if 'puts' in text:
-        replacement = 'puts down {} block. '.format(color[0])
+        replacement = 'place {} block. '.format(color[0])
     else:
-        replacement = 'picks up {} block. '.format(color[0])
+        replacement = 'remove {} block. '.format(color[0])
     return replacement
 
 def text_replace_coords(text):
-    colors  = ['red', 'blue', 'green', 'orange', 'yellow', 'purple', 'black']
+    colors  = ['red', 'blue', 'green', 'orange', 'yellow', 'purple']
     color = re.findall(r"\b({})\b".format('|'.join(colors)), text, flags=re.IGNORECASE)
     coords = text.split('at')[1].strip(']').strip()
     if 'puts' in text:
-        replacement = 'put down {} block at {}. '.format(color[0], coords)
+        replacement = 'place {} block {}. '.format(color[0], coords)
     else:
-        replacement = 'pick up {} block at {}. '.format(color[0], coords)
+        replacement = 'remove {} block {}. '.format(color[0], coords)
+    return replacement
+
+def text_replace_embeddings(text):
+    
+    colors  = ['red', 'blue', 'green', 'orange', 'yellow', 'purple']
+    color = re.findall(r"\b({})\b".format('|'.join(colors)), text, flags=re.IGNORECASE)
+    coords = text.split('at')[1].strip(']').strip().split(' ')
+    embed = get_bert_token(coords)
+    if len(embed) != 3:
+        print('{} not len 3'.format(coords))
+    """
+    [Builder puts down a green block at X:-3 Y:1 Z:-1]
+    """
+    if 'puts' in text:
+        replacement = 'put {} {} '.format(color[0], embed)
+    else:
+        replacement = 'remove {} {} '.format(color[0], embed)
     return replacement
 
 def squish_text(elements):
@@ -82,8 +128,14 @@ for f in json_files:
             #STEP 0: change all builder text in system moves
             for edu in game['edus']:
                 if edu['Speaker'] == 'System':
-                    edu['text'] = text_replace_coords(edu['text'])
-
+                    #new_text = text_replace_coords(edu['text'])
+                    new_text = text_replace_embeddings(edu['text'])
+                    edu['text'] = new_text
+                    if len(new_text) > 235:
+                        print('-------------')
+                        print(len)
+                        print(game['game_id'], edu['turnID'])
+                        
             #STEP 1: pull elements from each CDU 
             edus = [(e['unit_id'], e['start_pos'], e['Speaker'], e['text']) for e in game['edus']]
             cdus = game['cdus']

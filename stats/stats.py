@@ -15,6 +15,7 @@ arg_parser.add_argument("--parents", default=False, action='store_true', help='r
 arg_parser.add_argument("--corrections", default=False, action='store_true', help='returns game and num correction relations')
 arg_parser.add_argument("--candidates", default=False, action='store_true', help='returns number of candidates for a particular cutoff')
 arg_parser.add_argument("--num", type=int, nargs='+', help='specify particular cutoff for --candidates arg')
+arg_parser.add_argument("--undersample", type=int, nargs='+', help='specify number of 0 cands to drop if wanting to keep this balance')
 arg_parser.add_argument("--longest_rels", type=int, nargs=1, help='returns a list of relation types with len >= num')
 
 args = arg_parser.parse_args()
