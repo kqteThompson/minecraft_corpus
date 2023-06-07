@@ -25,8 +25,8 @@ def make_edu(eid, turn, seg, speaker, start, end):
 
 def make_relation(rid, x, y, type):
     tmp = ['<relation id="'+ rid +'">','<metadata>','<author>anonymous</author>','<creation-date>0</creation-date>',
-    '<lastModifier>n/a</lastModifier>','<lastModificationDate>0</lastModificationDate>','</metadata>',
-    '<characterisation>','<type>'+ type +'</type>','<featureSet/>','</characterisation>','<positioning>',
+    '<lastModifier>n/a</lastModifier>','<lastModificationDate>0</lastModificationDate>',
+    '</metadata>','<characterisation>','<type>'+ type +'</type>','<featureSet/>','</characterisation>','<positioning>',
     '<term id="'+ x +'"/>','<term id="'+ y +'"/>','</positioning>','</relation>']
 
     tmp_string = '\n'.join(tmp)
@@ -34,9 +34,10 @@ def make_relation(rid, x, y, type):
 
 def make_cdu(cid, embed_units):
     tmp = ['<schema id="'+ cid +'">','<metadata>','<author>nasher</author>',
-    '<creation-date>1675070060209</creation-date>','<lastModifier>nasher</lastModifier>',
-    '<lastModificationDate>1675070064349</lastModificationDate>','</metadata>','<characterisation>',
-    '<type>Complex_discourse_unit</type>','<featureSet/>','</characterisation>','<positioning>']
+    '<creation-date>0</creation-date>',
+    '<lastModifier>n/a</lastModifier>','<lastModificationDate>0</lastModificationDate>',
+    '</metadata>','<characterisation>', '<type>Complex_discourse_unit</type>','<featureSet/>',
+    '</characterisation>','<positioning>']
     for embed in embed_units:
         if 'minecraft' in embed:
             tmp.append('<embedded-unit id="'+ embed +'"/>')

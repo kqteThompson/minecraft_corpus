@@ -12,9 +12,16 @@ need the header to look like this:
 '''
 import uuid 
 
+# def builder_to_system(game):
+#     for edu in game['edus']:
+#         if 'X:' in edu['text_raw'] and 'Y:' in edu['text_raw']:
+#             edu['speaker'] = 'System'
+#     return game
+
 def builder_to_system(game):
     for edu in game['edus']:
-        if 'X:' in edu['text_raw'] and 'Y:' in edu['text_raw']:
+        text = ty = len(set([len(t) for t in edu['text'].strip().split(' ')]))
+        if text == 1:
             edu['speaker'] = 'System'
     return game
 

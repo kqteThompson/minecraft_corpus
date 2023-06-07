@@ -9,10 +9,10 @@ from genglozzsegments import get_format
 
 current_folder=os.getcwd()
 
-#corpus_path = '/home/kate/minecraft_corpus/bert_to_glozz/texts/'
-corpus_path = '/home/kate/cocobots_minecraft/splits_reseg/kate_reseg/'
+corpus_path = '/home/kate/minecraft_corpus/conll_to_splits/conll_text/'
+#corpus_path = '/home/kate/cocobots_minecraft/splits_reseg/test_all_reseg/'
 
-save_path= current_folder + '/glozz/'
+save_path= current_folder + '/glozz_train/'
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
 

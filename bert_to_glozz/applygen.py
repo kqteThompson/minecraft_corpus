@@ -13,10 +13,13 @@ current_folder=os.getcwd()
 
 # json_path = current_folder + '/' + predicted_relations
 
-json_path = '/home/kate/minecraft_corpus/bert/json_out/' + predicted_relations
+# json_path = '/home/kate/minecraft_corpus/bert/json_out/' + predicted_relations
+
+json_path = '/home/kate/minecraft_corpus/bert/json_out_val_batch/2023-05-29_SILVER_dev_100_squish_bert.json'
 
 
-save_path= current_folder + '/glozz_squished/'
+# save_path= current_folder + '/glozz_squished/'
+save_path= current_folder + '/glozz_squished_val/'
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
 

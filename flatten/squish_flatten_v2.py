@@ -1,6 +1,10 @@
 """
 Takes a json files of ANNOTATED games and returns a json with squished & flattened games
 Grosso modo:
+NEW in V2: special handling of linguistics CDUS:
+    a. all narrations in coming and outgoing to head
+    b. all other incoming links to head and all other outgoing links out of tail. 
+    c. all non-element 'danglers' that are "inside" the boundaries of the CDUs are ???
 1. For each EDU, if speaker == 'System', replace the text with simplified move text
 2. For each CDU, if it is a builder moves CDU: 
     2.1. Find the last EDU, creating a *replacements* dict that maps CDU ids to last id
@@ -17,7 +21,7 @@ Grosso modo:
 4. Go through and do all replacements
 
 NB: the output of this script is only useful as an input to a BERT formatting script.
-If you want to visualize with GLOZZ, BERT format then to BERT to GLOZZ formatting.
+If you want to visualize with GLOZZ, BERT format first then use BERT to GLOZZ formatting.
 """
 import os 
 import json 
@@ -142,6 +146,8 @@ for f in json_files:
         for game in jfile:
             print(game['game_id'])
             replacements = {}
+            ling_replacements_x = {} # relation_id : new x id
+            ling_replacements_y = {} # relation_id : new y id
             squish = {}
             redundant = []
             targets = {}
@@ -160,6 +166,17 @@ for f in json_files:
             #STEP 1: pull elements from each CDU 
             edus = [(e['unit_id'], e['start_pos'], e['Speaker'], e['text']) for e in game['edus']]
             cdus = game['cdus']
+
+            #STEP 1.2: create links dicts (only need to do this once)
+            outgoing_links = defaultdict(list)
+ 
+            for rel in game['relations']:
+                outgoing_links[rel['x_id']].append((rel['y_id'], rel['type'], rel['relation_id']))
+
+            incoming_links = defaultdict(list)
+            for rel in game['relations']:
+                incoming_links[rel['y_id']].append((rel['x_id'], rel['type'], rel['relation_id']))
+
             
             for cdu in cdus:
                 cid = cdu['schema_id']
@@ -175,16 +192,12 @@ for f in json_files:
 
                     #STEP 2.2: check if any of the elements has outgoing links (assume no incoming)
                     #these are "danglers"
-                    outgoing_links = defaultdict(list)
-                    #use default dict for cases where more than one dangler per edu
-                    for rel in game['relations']:
-                        outgoing_links[rel['x_id']].append(rel['y_id'])
 
                     pos = int(tail_position)
                     counter = 1
                     for e in elements:
                         if e[0] in outgoing_links.keys(): 
-                            for target in outgoing_links[e[0]]:
+                            for target in outgoing_links[e[0]][0]:
                                 targets[target] = pos + counter
                                 counter += 1
                             #for any danglers, 
@@ -210,10 +223,31 @@ for f in json_files:
                             redundant.append(e[0]) 
                 #STEP 3: if not components builder moves:
                 else:
+
                     first = min(elements, key=lambda tup: tup[1])
                     head = first[0]
-                    #STEP 3.1: map cid to head id in replacements dict
-                    replacements[cid] = head
+                    last = max(elements, key=lambda tup: tup[1])
+                    tail = last[0]
+
+                    #STEP 3.1: change relevant endpoints of relations connecing to linguistic CDUS
+                   
+                    #for link in outgoing links, if the source is the CDU, make the source the CDU tail unless 
+                    #the relation type is 'narration', then head
+                    for target in outgoing_links:
+                        if cid in outgoing_links.keys():
+                            for link in outgoing_links[cid]:
+                                if link[1] == 'Narration':
+                                    #then put on head
+                                    ling_replacements_x[link[2]] = head
+                                else:
+                                    #put on tail
+                                    ling_replacements_x[link[2]] = tail
+
+                    #for link in incoming links, if the target is the CDU, make the target the head
+                    for source in incoming_links:
+                        if cid in incoming_links.keys():
+                            for link in incoming_links[cid]:
+                                ling_replacements_y[link[2]] = head
 
             #STEP 4: once we have all replacements, replace ids in relation nodes
             for rel in game['relations']:
@@ -221,6 +255,11 @@ for f in json_files:
                     rel['x_id'] = replacements[rel['x_id']]
                 if rel['y_id'] in replacements:
                     rel['y_id'] = replacements[rel['y_id']]
+                if rel['relation_id'] in ling_replacements_x.keys():
+                    rel['x_id'] = ling_replacements_x[rel['relation_id']]
+                if rel['relation_id'] in ling_replacements_y.keys():
+                    rel['y_id'] = ling_replacements_y[rel['relation_id']]
+
             #add squish text to tail edu and remove other nodes
             #NB: we remove by creating a new edu array
             new_edus = []

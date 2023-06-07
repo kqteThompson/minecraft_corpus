@@ -7,7 +7,8 @@ import templates
 
 def get_format(game_json):
 
-    xml = ['<?xml version="1.0" encoding="UTF-8" standalone="no"?>', '<annotations>']
+    xml = ['<?xml version="1.0" encoding="UTF-8" standalone="no"?>', 
+    '<annotations>', '<metadata corpusHashcode="3797-98460153"/>']
 
     paras = game_json['paras']
     edus = game_json['edus']
@@ -23,6 +24,14 @@ def get_format(game_json):
         ees = [elem for elem in edus if elem['para_id'] == para_id]
         ees.sort(key = lambda x: x['start_pos'])
         for e in ees:
+            # speaker = None
+            # if 'Builder' in e['Speaker']:
+            #     speaker = 'Builder'
+            # elif 'Archi' in e['Speaker']:
+            #     speaker = 'Architect'
+            # else:
+            #     speaker = 'System'
+
             edu_temp = templates.make_edu(e['unit_id'], e['turnID'], e['minecraftSegID'], e['Speaker'], e['start_pos'], e['end_pos'])
             xml.append(edu_temp)
 

@@ -65,7 +65,7 @@ for f in json_files:
     now = datetime.datetime.now().strftime("%Y-%m-%d")
 
     ##save bert json
-    save_file_name = save_path + now + annotation_level + '_' + split + '_'+ str(n_games) +'_bert.json'
+    save_file_name = save_path + now + annotation_level + '_' + split + '_'+ str(n_games) +'_flat_bert.json'
     
     with open(save_file_name, 'w') as outfile:
         json.dump(output_list, outfile)

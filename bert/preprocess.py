@@ -10,7 +10,7 @@ import datetime
 current_folder=os.getcwd()
 
 # open_path = current_folder + '/json_in/'
-open_path = '/home/kate/minecraft_corpus/flatten/json_squishflat/'
+open_path = '/home/kate/minecraft_corpus/flatten/json_flat/'
 
 save_path= current_folder + '/json_in/'
 
@@ -21,11 +21,10 @@ test_games = ['C1', 'C14', 'C36']
 test_list = []
 train_list = []
 
-split = 'dev'
-annotation_level = 'SILVER'
+annotation_level = 'BRONZE_FLAT'
 
-# for f in json_files:
-for f in [j for j in json_files if j == '2023-05-10_squish_flat.json']: #!!!!
+for f in json_files:
+#for f in [j for j in json_files if j == '2023-05-17_squish_flat.json']: #!!!!
     with open(open_path + f, 'r') as jf:
         jfile = json.load(jf)
         for game in jfile:
@@ -43,7 +42,7 @@ for l in [test_list, train_list]:
     now = datetime.datetime.now().strftime("%Y-%m-%d")
 
     ##save bert json
-    save_file_name = save_path + now + '_' + annotation_level + '_' + split + '_' + num_games + '_bert.json'
+    save_file_name = save_path + now + '_' + annotation_level + '_' + num_games + '_bert.json'
 
     with open(save_file_name, 'w') as outfile:
         json.dump(l, outfile)

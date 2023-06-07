@@ -22,7 +22,7 @@ save_path= current_folder + '/conll_text/'
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
 
-conll_path = current_folder + '/minecraft_predict.conll'
+conll_path = current_folder + '/train_segs_tony.conll'
 
 
 def remove_contractions(turn):

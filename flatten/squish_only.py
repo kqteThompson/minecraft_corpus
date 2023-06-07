@@ -29,9 +29,9 @@ current_folder=os.getcwd()
 
 #open_path = current_folder + '/json/'
 # open_path = '/home/kate/minecraft_corpus/glozz_to_json/json_output_frozen/'
-open_path = '/home/kate/minecraft_corpus/glozz_to_json/json_output_test_batch/'
+open_path = '/home/kate/minecraft_corpus/glozz_to_json/json_output/'
 
-save_path = current_folder + '/json_squishflat_test_batch/'
+save_path = current_folder + '/json_flat/'
 
 json_files = os.listdir(open_path)
 
@@ -140,6 +140,7 @@ for f in json_files:
     with open(open_path + f, 'r') as jf:
         jfile = json.load(jf)
         for game in jfile:
+        #for game in [g for g in jfile if g['game_id'] == 'C17-B47-A30']:
             print(game['game_id'])
             replacements = {}
             squish = {}
@@ -149,7 +150,9 @@ for f in json_files:
             #STEP 0: change all builder text in system moves
             for edu in game['edus']:
                 if edu['Speaker'] == 'System':
-                    #new_text = text_replace_coords(edu['text'])
+                    #new_text = text_replace_coords(edu['text']) 
+                    # print(edu['text'])
+                    # print(edu['unit_id'])
                     new_text = text_replace_embeddings_full(edu['text'])
                     edu['text'] = new_text
                     if len(new_text) > 235:
@@ -210,6 +213,8 @@ for f in json_files:
                             redundant.append(e[0]) 
                 #STEP 3: if not components builder moves:
                 else:
+                    #we don't want any linguistic CDUs so flag these!!
+                    print("LINGUISTIC CDU FOUND in game {}, CDU {}".format(game['game_id'], cid))
                     first = min(elements, key=lambda tup: tup[1])
                     head = first[0]
                     #STEP 3.1: map cid to head id in replacements dict
@@ -254,7 +259,7 @@ for f in json_files:
 ##re-save a new json
 now = datetime.datetime.now().strftime("%Y-%m-%d")
 
-with open(save_path + now + '_squish_flat.json', 'w') as outfile:
+with open(save_path + now + '_squish.json', 'w') as outfile:
     json.dump(jfile, outfile)
 
 print('json saved')
