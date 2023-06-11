@@ -4,7 +4,9 @@ from collections import defaultdict
 
 train_done = ['C3', 'C17', 'C32', 'C63', 'C64', 'C59', 
               'C57', 'C18', 'C149', 'C80', 'C72', 'C154', 'C31', 
-              'C90', 'C47', 'C93', 'C22', 'C75', 'C120']
+              'C90', 'C47', 'C93', 'C22', 'C75', 'C120', 'C97', 'C42', 
+              'C87', 'C110', 'C29', 'C139', 'C116', 'C115', 'C126', 'C92', 
+              'C41']
 
 
 current_folder=os.getcwd()
