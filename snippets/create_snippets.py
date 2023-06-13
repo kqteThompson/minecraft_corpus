@@ -55,12 +55,13 @@ def _remove_corrections(snips, corrections):
 
 current_folder=os.getcwd()
 
-open_path = '/home/kate/minecraft_corpus/flatten/json_flat/2023-05-31_squish.json'
+open_path = '/home/kate/minecraft_corpus/flatten/json_flat/2023-06-12_squish.json'
 
 save_path= current_folder + '/snippets_out/'
 
 games = []
 remove_corrections = 'yes'
+#remove_multi_speaker = 'yes'
 
 with open(open_path, 'r') as jf:
     jfile = json.load(jf)
@@ -111,13 +112,41 @@ with open(open_path, 'r') as jf:
 
         games.append(game_dict)
 
-        #maybe add another field to each game that is for 'before start' and 
-        #a field for 'end matter'
-        ##HOW TO COUNT THE SNIPPETS##
-        #number of snippets with corrections
-        #number of snippets with internal moves
-        #what is the end of the snippet? the final moves are those before the end
+    print('{} total snippets and {} without correction'.format(total_snippets, total_minus_corrections))
     
+    #count the number of snippets that include more than one set of moves
+    #if remove_multi_speaker == 'yes': !! REMOVE by defalt for the moment
+    #return 'final games' which is all the snippets that are not multi move
+    multi_moves = []
+    final_games = []
+    final_snips_count = 0
+    for game in games:
+        new_game_dict = {}
+        new_game_dict['id'] = game["id"]
+        index_count = 0
+        snips = [item[1] for item in game.items() if item[0] != 'id']
+        for snip in snips:
+            speakers = [s for s in snip if s['Speaker'] == 'System']
+            if len(speakers) > 1:
+                multi_moves.append(game['id'] + ' ' + snip[0]['turnID'].split('.')[-1])
+                # final_game_list.append(game['id'])
+            else:
+                new_game_dict[index_count] = snip
+                index_count += 1
+                final_snips_count += 1
+        final_games.append(new_game_dict)
+                
+
+    print('{} snippets with multiple moves'.format(len(multi_moves)))
+    
+    print_string = '\n'.join(multi_moves)
+    
+    with open (current_folder + '/multimoves.txt', 'w') as txt_file:
+        txt_file.write(print_string)
+
+    print('{} final snippets'.format(final_snips_count))
+
+    ##output final snippets json
 
     num_games = len(jfile)
     print('{} games made into snippets.'.format(num_games))    
@@ -128,33 +157,13 @@ with open(open_path, 'r') as jf:
     save_file_name = save_path + now + '_' + str(num_games) + '_snippets.json'
     
     with open(save_file_name, 'w') as outfile:
-        json.dump(games, outfile)
+        json.dump(final_games, outfile)
 
     print('json saved')
-    print('{} total snippets and {} without correction'.format(total_snippets, total_minus_corrections))
-
-    #count the number of snippets that include more than one set of moves
-
-    multi_moves = []
-    final_game_list = []
-    for game in games:
-        snips = [item[1] for item in game.items() if item[0] != 'id']
-        for snip in snips:
-            speakers = [s for s in snip if s['Speaker'] == 'System']
-            if len(speakers) > 1:
-                multi_moves.append(game['id'] + ' ' + snip[0]['turnID'].split('.')[-1])
-                final_game_list.append(game['id'])
-    print('{} snippets with multiple moves'.format(len(multi_moves)))
-    
-    print_string = '\n'.join(multi_moves)
     
 
-    with open (current_folder + '/multimoves.txt', 'w') as txt_file:
-        txt_file.write(print_string)
 
-    print_games = list(set(final_game_list))
 
-    print(print_games)
 
         
         

@@ -1,5 +1,7 @@
 import os
 import json
+import nltk 
+from nltk.tokenize import wordpunct_tokenize
 # from collections import defaultdict
 
 """
@@ -21,7 +23,8 @@ original_corpus_path = '/home/kate/minecraft/corpus_small/'
 
 folder_array = os.listdir(original_corpus_path) 
 
-json_save_path = current_folder + '/observations_short/'
+#json_save_path = current_folder + '/observations_short/'
+json_save_path = '/home/kate/cocobots_minecraft/observation_logs/'
 
 if not os.path.isdir(json_save_path):
     os.makedirs(json_save_path)
@@ -41,8 +44,11 @@ for folder in folder_array:
                 new_world = []
                 last_chat = []
                 last_utterance = []
+                index = 0
                 for state in states:
                     new_state = {}
+                    new_state['state_index'] = index
+                    index += 1
                     new_state['BuilderPosition'] = state['BuilderPosition']
                     new_state['Timestamp'] = state['Timestamp']
                     new_state['BlocksInGrid'] = state['BlocksInGrid']
@@ -54,11 +60,22 @@ for folder in folder_array:
                     else:
                         last_chat = state['ChatHistory']
                         last_utterance = new_utt
-                        new_state['first_chat'] = new_utt
+                        fchat = {}
+                        fchat['utterance'] = new_utt
+                        tokens = []
+                        for utt in new_utt:
+                            if '<Arch' in utt:
+                                t = ['Architect', wordpunct_tokenize(utt.split('>')[1])]
+                            else:
+                                t = ['Builder', wordpunct_tokenize(utt.split('>')[1])]
+                            tokens.append(t)
+                        fchat['tokens'] = tokens
+                        new_state['first_chat'] = fchat
                     #save old history
                     new_world.append(new_state)
                 #replace worlstates field with new world
                 jfile['WorldStates'] = new_world
+                jfile['orig_experimental_id'] = folder + '/logs/' + dir
 
             with open(json_save_path + new_name + '_' + 'observations' + '.json', 'w') as outfile:
                 json.dump(jfile, outfile)

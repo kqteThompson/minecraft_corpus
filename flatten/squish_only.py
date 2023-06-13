@@ -55,6 +55,7 @@ def get_bert_token(coord_list):
     zdict = {'-5': 'a', '-4': 'e', '-3': 'i', '-2': 'o', '-1': 'u', '0': 'p', 
              '1':'q', '2':'r', '3':'x', '4':'y', '5':'z'}
     token = ''
+    skip_flag = 0
     for c in coord_list:
         i,j = c.split(':')
         if i == 'X':
@@ -62,8 +63,8 @@ def get_bert_token(coord_list):
                 token += xdict[j]
             except KeyError:
                 print('issue with X coord: {}'.format(coord_list))
-                token += 'n'
-                ##for now just assume highest X coord
+                #token += 'n' ##for now just assume highest X coord
+                skip_flag = 1 #make skip flag
         if i == 'Y':
             token += j
         if i == 'Z':
@@ -71,8 +72,10 @@ def get_bert_token(coord_list):
                 token += zdict[j]
             except KeyError:
                 print('issue with Z coord: {}'.format(coord_list))
-                token += 'a'
-                ##for now just assume lowest Z coord
+                ##token += 'a' ##for now just assume lowest Z coord
+                skip_flag = 1 #make skip flag
+        if skip_flag == 1:
+            token = 'SKP'
     return token 
 
 def text_replace(text):
@@ -123,12 +126,15 @@ def text_replace_embeddings_full(text):
     """
     [Builder puts down a green block at X:-3 Y:1 Z:-1]
     """
-    if 'puts' in text:
-        replacement = ['1', c, embed, ' ']
-        replacement = ''.join(replacement)
+    if embed == 'SKP':
+        replacement = 'SKIP '
     else:
-        replacement = ['0', c, embed, ' ']
-        replacement = ''.join(replacement)
+        if 'puts' in text:
+            replacement = ['1', c, embed, ' ']
+            replacement = ''.join(replacement)
+        else:
+            replacement = ['0', c, embed, ' ']
+            replacement = ''.join(replacement)
     return replacement
 
 def squish_text(elements):
@@ -136,7 +142,9 @@ def squish_text(elements):
     squished = ''.join([s[3] for s in elements])
     return squished 
 
-for f in json_files:
+#for f in json_files:
+for f in [s for s in json_files if s == 'SILVER_2023-06-12.json']:
+    linguistic_cdus = [] # a list of the uncaught linguistic CDUs
     with open(open_path + f, 'r') as jf:
         jfile = json.load(jf)
         for game in jfile:
@@ -214,6 +222,7 @@ for f in json_files:
                 #STEP 3: if not components builder moves:
                 else:
                     #we don't want any linguistic CDUs so flag these!!
+                    linguistic_cdus.append(game['game_id'])
                     print("LINGUISTIC CDU FOUND in game {}, CDU {}".format(game['game_id'], cid))
                     first = min(elements, key=lambda tup: tup[1])
                     head = first[0]
@@ -263,6 +272,14 @@ with open(save_path + now + '_squish.json', 'w') as outfile:
     json.dump(jfile, outfile)
 
 print('json saved')
+print('{} Linguistic CDUs to flatten'.format(linguistic_cdus))
+
+print_string = '\n'.join(linguistic_cdus)
+if len(linguistic_cdus) > 1:
+    with open (current_folder+ '/ling_cdus.txt', 'w') as txt_file:
+        txt_file.write(print_string)
+
+
 
             
             
