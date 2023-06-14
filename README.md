@@ -2,7 +2,10 @@
 
 
 ## to create GLOZZ files from Minecraft text files. 
+1. /text_to_glozz/apply_gen.py
 
+## to create split text files from parser output
+1. /conll_to_splits/con_to_text.py 
 
 ## to create json files from games in GLOZZ xml & txt format
 1. asdfasdf
@@ -11,11 +14,10 @@
 ## to run a sanity check on games
 1. Create a json from aa files --> /glozz_to_json/create_json.py
 If there are any relation issues (ie a relation is missing an endpoint), 
-it will give a warning and skip a file. 
+it will give a warning and skip a file. NB: this is usually because a relation has a relation as a
+constituent.
 Make sure to check the file manually in glozz before re-running this step.
-2. Then run /sanity_checks/perform_checks.py
-Then look at logs to see which games have issues
-3. 
+2. Then run /sanity_checks/perform_checks.py  Then look at logs to see which games have issues
 
 ## to flatten CDUs in games.json
 
@@ -26,7 +28,8 @@ Then look at logs to see which games have issues
 ## How to flatten and squish an annotated GLOZZ file for BERT
 1. Convert glozz file to json --> /glozz_to_json/create_json.py
 2. Flatten and squish json -->  /flatten/squish_flatten_cdus.py
-3. Convert to BERT format --> /bert/bert_format_annotated.py
+3. Convert to BERT format --> /bert/bert_format_annotated.py*
+*to specify test/train splits, use bert/preprocess.py FIRST
 
 ## How to convert BERT predictions to BERT json format
 1. asfsedf NB sometimes speaker for builder actions is "builder"

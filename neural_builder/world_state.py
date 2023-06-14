@@ -100,6 +100,7 @@ def get_built_config(prev_config, actions):
     EX: 'in a line?'
     [{'action_type': 'placement', 'block': {'type': 'blue', 'x': 3, 'y': 3, 'z': -1}}, 
     {'action_type': 'placement', 'block': {'type': 'blue', 'x': 3, 'y': 3, 'z': -2}}]
+
     [{'PerspectiveCoordinates': 
     {'Y': -0.6689363460755829, 'X': -0.14414329148100002, 'Z': 2.351966597640045}, 
     'AbsoluteCoordinates': {'Y': 1, 'X': 3, 'Z': 0}, 'Type': 'cwc_minecraft_blue_rn'}, 
@@ -117,9 +118,37 @@ def get_built_config(prev_config, actions):
     'AbsoluteCoordinates': {'Y': 3, 'X': 3, 'Z': 0}, 'Type': 'cwc_minecraft_blue_rn'}]
 
     """
-    built_config = {}
-    # abs_prev = []
-    # for block in prev_config:
-    #     color = block['Type']
-    #     coords = block['AbsoluteCoordinates']
+    built_config = []
+  
+    abs_prev = []
+    new_remove = []
+    new_put = []
+    for move in prev_config:
+        color = move['Type'].split('_')[2]
+        abs_prev.append((color, move['AbsoluteCoordinates']['X'], 
+                         move['AbsoluteCoordinates']['Y'], move['AbsoluteCoordinates']['Z']))
+    for move in actions:
+        if move['action_type'] == 'placement':
+            new_put.append((move['block']['type'], move['block']['x'], move['block']['y'], move['block']['z']))
+        else:
+            new_remove.append((move['block']['type'], move['block']['x'], move['block']['y'], move['block']['z']))
+
+    #check to see if there are any cancelations
+    abs_prev.extend(new_put)
+    final_config = [m for m in abs_prev if m not in new_remove]
+    
+    #reformat
+    for block in final_config:
+        b = {}
+        b['AbsoluteCoordinates'] = {}
+        b['AbsoluteCoordinates']['Y'] = block[2]
+        b['AbsoluteCoordinates']['X'] = block[1]
+        b['AbsoluteCoordinates']['Z'] = block[3]
+        b['Type'] = 'cwc_mincraft_' + block[0] + '_rn'
+        built_config.append(b)
+
+    #last check
+    if len(built_config) != len(final_config):
+        print('ERROR IN FINAL CONFIG')
+
     return built_config
