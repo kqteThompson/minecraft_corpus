@@ -1,8 +1,9 @@
 import os
 import json
 import nltk 
-from nltk.tokenize import wordpunct_tokenize
+# from nltk.tokenize import wordpunct_tokenize
 # from collections import defaultdict
+from prashant import tokenize
 
 """
 navigates through the observation logs files provided by Hockenmeier team
@@ -65,9 +66,11 @@ for folder in folder_array:
                         tokens = []
                         for utt in new_utt:
                             if '<Arch' in utt:
-                                t = ['Architect', wordpunct_tokenize(utt.split('>')[1])]
+                                #t = ['Architect', wordpunct_tokenize(utt.split('>')[1])]
+                                t = ['Architect', tokenize(utt.split('>')[1])[0]]
                             else:
-                                t = ['Builder', wordpunct_tokenize(utt.split('>')[1])]
+                                #t = ['Builder', wordpunct_tokenize(utt.split('>')[1])]
+                                t = ['Builder', tokenize(utt.split('>')[1])[0]]
                             tokens.append(t)
                         fchat['tokens'] = tokens
                         new_state['first_chat'] = fchat

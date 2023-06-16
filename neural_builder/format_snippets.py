@@ -4,26 +4,56 @@ which are formatted according to
 https://github.com/prashant-jayan21/minecraft-bap-models/blob/master/docs/data_format.md
 
 fields:
-1. builder_action_history [TODO]
-2. next_builder_actions
-3. prev_utterances [**DO WE NEED TO ADD ALL?] [TODO]
+1. builder_action_history [TODO] [list of builder actions objects]
+2. next_builder_actions [TODO] [builder action objects]
+
+3. prev_utterances [TODO] all previous utterances including moves
+NB: first one is  always:  utterance': ['<dialogue>']
+{'speaker': 'Builder', 'utterance': ['<builder_putdown_orange>']}, 
+{'speaker': 'Builder', 'utterance': ['<builder_putdown_orange>']}, 
+{'speaker': 'Builder', 'utterance': ['<builder_pickup_orange>']}, 
+{'speaker': 'Architect', 
+'utterance': ['build', 'one', 'orange', 'on', 'top', 'of', 'it']}, 
+{'speaker': 'Builder', 'utterance': ['<builder_putdown_orange>']}...
+
 4. gold_config [ignore for now??]
-5. built_config 
-6. prev_config
+<DrawBlock type="cwcmod:cwc_minecraft_green_rn" x="95" y="1" z="100"/>
+
+5. built_config [NB: take out absolute coordinates fields] 
+eg: [{'x': 0, 'y': 1, 'z': -5, 'type': 'yellow'}, 
+{'x': 0, 'y': 2, 'z': -4, 'type': 'yellow'}, 
+{'x': 0, 'y': 3, 'z': -3, 'type': 'yellow'}, 
+{'x': -3, 'y': 1, 'z': -1, 'type': 'orange'}, 
+{'x': -3, 'y': 2, 'z': -1, 'type': 'orange'}]
+BUT SHOULD IT LOOK LIKE THIS
+{'Y': 1, 'X': 4, 'Z': 0, 'Type': 'cwc_minecraft_red_rn'}, 
+
+6. prev_config 
 7. prev_builder_position
-8. perspective_coordinates [TODO]
+8. perspective_coordinates
 9. from_aug_data (always 0) 
 10. json_id [TODO]
 11. sample_id 
-12. orig_experiment_id [TODO]
+12. orig_experiment_id [TODO] 
+ex
+orig_experiment_id
+B1-A4-C54-1522773776201
 
 """
 import os 
 import json 
 import datetime
+import numpy as np
 import nltk
-from nltk.tokenize import wordpunct_tokenize
+# from nltk.tokenize import wordpunct_tokenize
 from world_state import get_next_builder_actions, get_instruction, return_state_info, get_built_config
+from prashant import get_perspective_coord_repr, tokenize
+
+# NB: figure out why these functions work
+# bp = {"Y": 1.0, "X": 0.39257861423974655, "Yaw": -1.6499993, "Z": -0.2203967099795332,"Pitch": 46.499996}
+# coord_test = get_perspective_coord_repr(bp)
+# print(coord_test)
+
 
 current_folder=os.getcwd()
 
@@ -73,11 +103,13 @@ with open(open_path + snip_file, 'r') as jf:
                     data_point['next_builder_actions'] = get_next_builder_actions(text)
                     break # stop the loop here since we don't care about moves that are after builder moves
                 else:
-                    toks = wordpunct_tokenize(text)
+                    #toks = wordpunct_tokenize(text)
+                    toks = tokenize(text)[0]
                     if 'Arch' in speaker:
                         new_speaker = 'Architect'
                     else:
                         new_speaker = 'Builder'
+
                     snip.append((new_speaker, toks))
             #PREVIOUS UTTERANCES
             data_point['prev_utterances'] = get_instruction(snip)
@@ -106,6 +138,9 @@ with open(open_path + snip_file, 'r') as jf:
             bconf = get_built_config(dp['prev_config'], dp['next_builder_actions'])
             dp['built_config'] = bconf
 
+            #PERSPECTIVE COORDINATES
+            dp['perspective_coordinates'] = get_perspective_coord_repr(bpos)
+
             data.append(dp)
 
             # print('-------BUILDER ACTIONS-----')
@@ -117,14 +152,21 @@ with open(open_path + snip_file, 'r') as jf:
             # print(dp['built_config'])
             # print('==============================================================')
 
+# print(len(data[0]))
+
+for item in data[0].items():
+    if item[0] != 'perspective_coordinates':
+        print(item[0])
+        print(item[1])
+        print('---------------------------------')
 
 ##save json
-now = datetime.datetime.now().strftime("%Y-%m-%d")
+# now = datetime.datetime.now().strftime("%Y-%m-%d")
 
-with open(json_save_path + snip_file.strip('.json') + '_' + now + '.json', 'w') as outfile:
-    json.dump(data, outfile)
+# with open(json_save_path + snip_file.strip('.json') + '_' + now + '.json', 'w') as outfile:
+#     json.dump(data, outfile)
 
-print('json saved')
+# print('json saved')
 
   
             
