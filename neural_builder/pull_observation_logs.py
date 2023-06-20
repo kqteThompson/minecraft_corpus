@@ -43,8 +43,9 @@ for folder in folder_array:
                 jfile = json.load(jf)
                 states = jfile['WorldStates']
                 new_world = []
-                last_chat = []
+                #last_chat = []
                 last_utterance = []
+                last_history = 0
                 index = 0
                 for state in states:
                     new_state = {}
@@ -54,12 +55,15 @@ for folder in folder_array:
                     new_state['Timestamp'] = state['Timestamp']
                     new_state['BlocksInGrid'] = state['BlocksInGrid']
                     #keep only the new utterances
-                    new_utt = [u for u in state['ChatHistory'] if u not in last_chat]
+                    #can't do it this way just in case there are repeated worlds like 'nah'
+                    #new_utt = [u for u in state['ChatHistory'] if u not in last_chat]
+                    new_utt = state['ChatHistory'][last_history:]
                     if len(new_utt) == 0:
                         new_utt = last_utterance
                         new_state['chat_continued'] = new_utt
                     else:
-                        last_chat = state['ChatHistory']
+                        #last_chat = state['ChatHistory']
+                        last_history = len(state['ChatHistory'])
                         last_utterance = new_utt
                         fchat = {}
                         fchat['utterance'] = new_utt
@@ -67,10 +71,10 @@ for folder in folder_array:
                         for utt in new_utt:
                             if '<Arch' in utt:
                                 #t = ['Architect', wordpunct_tokenize(utt.split('>')[1])]
-                                t = ['Architect', tokenize(utt.split('>')[1])[0]]
+                                t = ['Architect', tokenize(utt.split('Architect>')[1])[0]]
                             else:
                                 #t = ['Builder', wordpunct_tokenize(utt.split('>')[1])]
-                                t = ['Builder', tokenize(utt.split('>')[1])[0]]
+                                t = ['Builder', tokenize(utt.split('Builder>')[1])[0]]
                             tokens.append(t)
                         fchat['tokens'] = tokens
                         new_state['first_chat'] = fchat

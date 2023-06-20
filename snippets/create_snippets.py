@@ -55,7 +55,7 @@ def _remove_corrections(snips, corrections):
 
 current_folder=os.getcwd()
 
-open_path = '/home/kate/minecraft_corpus/flatten/json_flat/2023-06-12_squish.json'
+open_path = '/home/kate/minecraft_corpus/flatten/json_flat/2023-06-19_squish.json'
 
 save_path= current_folder + '/snippets_out/'
 
@@ -116,45 +116,81 @@ with open(open_path, 'r') as jf:
     
     #count the number of snippets that include more than one set of moves
     #if remove_multi_speaker == 'yes': !! REMOVE by defalt for the moment
+    #ALSO count snippets that don't contain any moves and record. REMOVE by 
+    #default for the moment. 
     #return 'final games' which is all the snippets that are not multi move
     multi_moves = []
+    no_moves = []
+    moves_first = []
     final_games = []
     final_snips_count = 0
     for game in games:
         new_game_dict = {}
-        new_game_dict['id'] = game["id"]
+        
         index_count = 0
         snips = [item[1] for item in game.items() if item[0] != 'id']
         for snip in snips:
-            speakers = [s for s in snip if s['Speaker'] == 'System']
+            speakers = [(i,s) for i, s in enumerate(snip) if s['Speaker'] == 'System']
             if len(speakers) > 1:
-                multi_moves.append(game['id'] + ' ' + snip[0]['turnID'].split('.')[-1])
-                # final_game_list.append(game['id'])
+                try:
+                    multi_moves.append(game['id'] + ' ' + snip[0]['turnID'].split('.')[-1])
+                except KeyError:
+                    multi_moves.append(game['id'] + ' ' + '(no turn num). Text: ' + snip[0]['text'])
+            elif len(speakers) == 0:
+                try:
+                    no_moves.append(game['id'] + ' ' + snip[0]['turnID'].split('.')[-1])
+                except KeyError:
+                    no_moves.append(game['id'] + ' ' + '(no turn num). Text: ' + snip[0]['text'])
+            #or if there is no instruction before the moves
+            elif speakers[0][0] == 0:
+                try:
+                    moves_first.append(game['id'] + ' ' + snip[0]['turnID'].split('.')[-1])
+                except KeyError:
+                    moves_first.append(game['id'] + ' ' + '(no turn num). Text: ' + snip[0]['text'])
             else:
                 new_game_dict[index_count] = snip
                 index_count += 1
                 final_snips_count += 1
-        final_games.append(new_game_dict)
+        if index_count > 0 :
+            new_game_dict['id'] = game['id']
+            final_games.append(new_game_dict)
                 
-
     print('{} snippets with multiple moves'.format(len(multi_moves)))
     
     print_string = '\n'.join(multi_moves)
     
     with open (current_folder + '/multimoves.txt', 'w') as txt_file:
         txt_file.write(print_string)
+    
+    print('{} snippets with no moves'.format(len(no_moves)))
+    
+    print_string = '\n'.join(no_moves)
+
+    with open (current_folder + '/nomoves.txt', 'w') as txt_file:
+        txt_file.write(print_string)
+
+    print('{} snippets where no instructions before moves'.format(len(moves_first)))
+    
+    print_string = '\n'.join(moves_first)
+    
+    with open (current_folder + '/noinst.txt', 'w') as txt_file:
+        txt_file.write(print_string)
 
     print('{} final snippets'.format(final_snips_count))
 
     ##output final snippets json
 
-    num_games = len(jfile)
-    print('{} games made into snippets.'.format(num_games))    
+    num_games = [el['game_id'] for el in jfile]
+    num_snips_done = [el['id'] for el in final_games]
+    games_skipped = [g for g in num_games if g not in num_snips_done]
+    print('{} games checked for snippets, {} games made into snippets.'.format(len(num_games), len(num_snips_done)))   
+    for sk in games_skipped:
+        print('skipped game {}'.format(sk))
 
     now = datetime.datetime.now().strftime("%Y-%m-%d")
 
     ##save bert json
-    save_file_name = save_path + now + '_' + str(num_games) + '_snippets.json'
+    save_file_name = save_path + now + '_' + str(len(num_snips_done)) + '_snippets.json'
     
     with open(save_file_name, 'w') as outfile:
         json.dump(final_games, outfile)

@@ -54,11 +54,12 @@ def get_perspective_coordinates(x, y, z, yaw, pitch):
 vf = np.vectorize(get_perspective_coordinates)
 
 def get_perspective_coord_repr(builder_position):
-	bx = builder_position["X"]
-	by = builder_position["Y"]
-	bz = builder_position["Z"]
-	yaw = builder_position["Yaw"]
-	pitch = builder_position["Pitch"]
+	# print(builder_position)
+	bx = builder_position["x"]
+	by = builder_position["y"]
+	bz = builder_position["z"]
+	yaw = builder_position["yaw"]
+	pitch = builder_position["pitch"]
 
 	perspective_coords = np.zeros((3, x_range, y_range, z_range))
 	for x in range(x_range):
@@ -121,6 +122,11 @@ class BuilderAction():
 
 
 def tokenize(utterance):
+	#take out quotes -- added to handle errors with 
+	#log matches
+	utterance.replace('"', '')
+	utterance = re.sub('"', '', utterance)
+
 	tokens = utterance.split()
 	fixed = ""
 

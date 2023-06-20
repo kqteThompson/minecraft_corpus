@@ -76,12 +76,25 @@ def format_prev_config(pg):
     config = []
     for d in pg:
         new_d = {}
-        new_d['Type'] = d['Type']
-        new_d['X'] = d['AbsoluteCoordinates']['X']
-        new_d['Y'] = d['AbsoluteCoordinates']['Y']
-        new_d['Z'] = d['AbsoluteCoordinates']['Z']
+        new_d['type'] = d['Type'].split('_')[2]
+        new_d['x'] = d['AbsoluteCoordinates']['X']
+        new_d['y'] = d['AbsoluteCoordinates']['Y']
+        new_d['z'] = d['AbsoluteCoordinates']['Z']
         config.append(new_d)
     return config
+
+def format_build_pos(pd):
+    """
+    takes a prev builder position dict and returns same
+    but with lower case keys
+    """
+    pos = {}
+    pos['x'] = pd['X']
+    pos['y'] = pd['Y']
+    pos['z'] = pd['Z']
+    pos['yaw'] = pd['Yaw']
+    pos['pitch'] = pd['Pitch']
+    return pos 
 
 def return_state_info(worldstates, speaker, utterance, start_index):
     """
@@ -102,12 +115,17 @@ def return_state_info(worldstates, speaker, utterance, start_index):
             for turn in log['first_chat']['tokens']:
                 if turn[0] == speaker:
                     #see if tokens match
+                    # print('---matching---')
+                    # print(log['state_index'])
+                    # print(turn[1])
+                    # print(utterance)
                     if isSubsequence(utterance, turn[1]):
+                        # print('matched {}!!'.format(log['state_index']))
                         sample_id = log['state_index']
-                        prev_builder_position = log['BuilderPosition']
+                        prev_builder_position = format_build_pos(log['BuilderPosition'])
                         prev_config = format_prev_config(log['BlocksInGrid'])
-                        break
-    return sample_id, prev_builder_position, prev_config
+                        #break
+                        return sample_id, prev_builder_position, prev_config
 
 def get_built_config(prev_config, actions):
     """
@@ -120,9 +138,12 @@ def get_built_config(prev_config, actions):
     abs_prev = []
     new_remove = []
     new_put = []
-    for move in prev_config:
-        color = move['Type'].split('_')[2]
-        abs_prev.append((color, move['X'], move['Y'], move['Z']))
+    if prev_config:
+        for move in prev_config:
+            # color = move['Type'].split('_')[2]
+            # abs_prev.append((color, move['X'], move['Y'], move['Z']))
+            color = move['type']
+            abs_prev.append((color, move['x'], move['y'], move['z']))
     for move in actions: ##needed to make this compatible with the BuilderAction Class instances
         #if move['action_type'] == 'placement':
         if move.get_action() == 'placement':
@@ -140,10 +161,11 @@ def get_built_config(prev_config, actions):
     for block in final_config:
         b = {}
         b = {}
-        b['Y'] = block[2]
-        b['X'] = block[1]
+        b['y'] = block[2]
+        b['x'] = block[1]
         b['Z'] = block[3]
-        b['Type'] = 'cwc_minecraft_' + block[0] + '_rn'
+        # b['type'] = 'cwc_minecraft_' + block[0] + '_rn'
+        b['type'] = block[0]
         built_config.append(b)
 
     #last check
