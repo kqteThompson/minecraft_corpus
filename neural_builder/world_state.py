@@ -1,10 +1,10 @@
-from prashant import BuilderAction
+from prashant import BuilderAction, BuilderActionExample
 
 def get_next_builder_actions(builder_moves):
     """
     takes a list of builder moves 
     e.g. 1bl1o 1bl2o 0bl2o 0bl1o 1bl1i 1bl2i 1bl3i 
-    returns a list of BuilderAction objects
+    returns a list of BuilderActionExample objects
     {
     action_type: str, 
     block: {x:int, y:int, z:int type: str}

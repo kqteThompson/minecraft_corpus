@@ -11,7 +11,8 @@ Grosso modo:
     2.3. For each EDU that is not the last, gather the text and squish into one block
     and assign to the last edu by adding to the dict *squish*, mapping last id : squish text
     2.4. Add all non-last EDU ids to the *redundant* list to be removed 
-3. For each CDU, if it is not a builder moves CDU:
+3. For each CDU, if it is not a builder moves CDU: 
+**NB there should be none of these CDUS in this data
     3.1 Find the head EDU
     3.2 For every head EDU, add CDU id : head id
 4. Go through and do all replacements
@@ -24,6 +25,7 @@ import json
 import re
 import datetime
 from collections import defaultdict
+import pickle
 
 current_folder=os.getcwd()
 
@@ -32,6 +34,8 @@ current_folder=os.getcwd()
 open_path = '/home/kate/minecraft_corpus/glozz_to_json/json_output/'
 
 save_path = current_folder + '/json_flat/'
+
+squish_record = defaultdict(list)
 
 json_files = os.listdir(open_path)
 
@@ -252,6 +256,8 @@ for f in [s for s in json_files if s == 'SILVER_2023-06-12.json']:
                     #and if so change position of the edu
                     if edu['end_pos'] <= cdu_outgoing[edu['unit_id']][0]:
                         edu['start_pos'] = cdu_outgoing[edu['unit_id']][1]
+                        #record the target so that we can have a record of which CDUs got squished
+                        squish_record[game['game_id']].append((edu['Speaker'], edu['text'], edu['unit_id']))
                     new_edus.append(edu)
                 else:
                     new_edus.append(edu)
@@ -278,6 +284,30 @@ print_string = '\n'.join(linguistic_cdus)
 if len(linguistic_cdus) > 1:
     with open (current_folder+ '/ling_cdus.txt', 'w') as txt_file:
         txt_file.write(print_string)
+
+
+squish_list = []
+print('Squish records for {} games'.format(len(squish_record)))
+for key in squish_record.keys():
+    squish_list.append(key)
+    for edu in squish_record[key]:
+        squish_list.append(edu[0] + ' : ' + edu[1])
+print_string = '\n'.join(squish_list)
+with open (current_folder+ '/squish_edus.txt', 'w') as txt_file:
+        txt_file.write(print_string)
+
+squish_stats = []
+for key in squish_record.keys():
+    squish_stats.append((key, len(squish_record[key])))
+
+for s in squish_stats:
+    print(s)
+   
+# if len(squish_record) > 0:
+#     with open(current_folder + '/' + now + '_squish.pkl', 'wb') as handle:
+#         pickle.dump(squish_record, handle, protocol=3)
+
+
 
 
 

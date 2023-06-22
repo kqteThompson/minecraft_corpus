@@ -15,7 +15,10 @@ def get_splits(orig_splits, snips):
     val_prop = round(total * .1)
     val_cand = [e for e in new_train if e not in snips]
     new_val = val_cand[:val_prop+1]
-    new_train = [e for e in new_train if e not in new_val]
-    snip_splits['train'] = new_train
+    split_train = [e for e in new_train if e not in new_val]
+    snip_splits['train'] = split_train
     snip_splits['val'] = new_val
+    new_total = len(split_train) + len(new_val)
+    if new_total != total:
+        print('missing games in new split!')
     return snip_splits

@@ -75,6 +75,27 @@ def get_perspective_coord_repr(builder_position):
     
 	return np.stack([px, py, pz])
 
+class BuilderActionExample():
+	def __init__(self, action, built_config, prev_config, action_history):
+		self.action = action # of type BuilderAction or None
+		self.built_config = built_config
+		self.prev_config = prev_config
+		self.action_history = action_history
+
+	def is_action(self):
+		return isinstance(self.action, BuilderAction)
+
+	def is_stop_token(self):
+		return self.action == None
+
+	def __eq__(self, other):
+		if not isinstance(other, BuilderActionExample):
+			# don't attempt to compare against unrelated types
+			return NotImplemented
+
+		return self.action == other.action and self.built_config == other.built_config \
+			and self.prev_config == other.prev_config and self.action_history == other.action_history
+	
 class BuilderAction():
     """ Class representing a builder's action. """
     def __init__(self, block_x, block_y, block_z, block_type,
