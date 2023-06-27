@@ -1,49 +1,14 @@
 """
-for each snippet, run functions to return a list of datapoints 
-which are formatted according to 
-https://github.com/prashant-jayan21/minecraft-bap-models/blob/master/docs/data_format.md
-
-fields:
-1. builder_action_history [TODO] [list of builder actions objects]
-2. next_builder_actions [TODO] [builder action objects]
-
-3. prev_utterances [TODO] all previous utterances including moves
-NB: first one is  always:  utterance': ['<dialogue>']
-{'speaker': 'Builder', 'utterance': ['<builder_putdown_orange>']}, 
-{'speaker': 'Builder', 'utterance': ['<builder_putdown_orange>']}, 
-{'speaker': 'Builder', 'utterance': ['<builder_pickup_orange>']}, 
-{'speaker': 'Architect', 
-'utterance': ['build', 'one', 'orange', 'on', 'top', 'of', 'it']}, 
-{'speaker': 'Builder', 'utterance': ['<builder_putdown_orange>']}...
-
-4. gold_config [ignore for now??]
-<DrawBlock type="cwcmod:cwc_minecraft_green_rn" x="95" y="1" z="100"/>
-
-5. built_config [NB: take out absolute coordinates fields] 
-eg: [{'x': 0, 'y': 1, 'z': -5, 'type': 'yellow'}, 
-{'x': 0, 'y': 2, 'z': -4, 'type': 'yellow'}, 
-{'x': 0, 'y': 3, 'z': -3, 'type': 'yellow'}, 
-{'x': -3, 'y': 1, 'z': -1, 'type': 'orange'}, 
-{'x': -3, 'y': 2, 'z': -1, 'type': 'orange'}]
-BUT SHOULD IT LOOK LIKE THIS
-{'Y': 1, 'X': 4, 'Z': 0, 'Type': 'cwc_minecraft_red_rn'}, 
-
-6. prev_config 
-7. prev_builder_position
-8. perspective_coordinates
-9. from_aug_data (always 0) 
-10. json_id [TODO]
-11. sample_id 
-12. orig_experiment_id [TODO] 
-ex
-orig_experiment_id
-B1-A4-C54-1522773776201
+A shorter version of format_snippets in which for each snippet, we return the 
+orig and the sample_ids
+so that anything NOT in these is removed from the amended BAP training data
 
 """
 import os 
 import json 
 import datetime
 import numpy as np
+from collections import defaultdict
 import torch
 import nltk
 # from nltk.tokenize import wordpunct_tokenize
@@ -62,8 +27,8 @@ current_folder=os.getcwd()
 open_path = '/home/kate/minecraft_corpus/snippets/snippets_out/'
 contents = os.listdir(open_path) 
 # snip_file = contents[0]
-snip_file = '2023-06-09_1_snippets.json'
-#snip_file = '2023-06-19_162_snippets.json'
+#snip_file = '2023-06-09_1_snippets.json'
+snip_file = '2023-06-19_162_snippets.json'
 
 json_files = os.listdir(open_path)
 
@@ -149,17 +114,31 @@ with open(open_path + snip_file, 'r') as jf:
             # #PREVIOUS BUILDER POSITION
             # #PREVIOUS CONFIG
             dp['sample_id'] = i + 1 #need to add 1 to match with original BAP sample id
-            dp['from_aug_data'] = False
-            dp['prev_builder_position'] = bpos
-            dp['prev_config'] = pconf
-            #BUILT CONFIG
-            bconf = get_built_config(dp['prev_config'], dp['next_builder_actions'])
-            dp['built_config'] = bconf
+            # dp['from_aug_data'] = False
+            # dp['prev_builder_position'] = bpos
+            # dp['prev_config'] = pconf
+            # #BUILT CONFIG
+            # bconf = get_built_config(dp['prev_config'], dp['next_builder_actions'])
+            # dp['built_config'] = bconf
 
-            #PERSPECTIVE COORDINATES
-            dp['perspective_coordinates'] = torch.tensor(get_perspective_coord_repr(bpos))
+            # #PERSPECTIVE COORDINATES
+            # dp['perspective_coordinates'] = torch.tensor(get_perspective_coord_repr(bpos))
 
             data.append(dp)
+
+##RETURN JSON OF SNIPPETS TO KEEP
+snippets = defaultdict(list)
+# final_snippets = []
+
+for snip in data:
+    snippets[snip['orig_experiment_id']].append(snip['sample_id'])
+final_snippets = {k:v for k,v in snippets.items()}
+# for k,v in snippets.items():
+#     final_snippets[k] = v
+#     json_format = {}
+#     json_format['orig_experiment_id'] = k
+#     json_format['sample_ids'] = v
+#     final_snippets.append(json_format)
 
 
 # # RETURN NEW SPLITS
@@ -173,36 +152,37 @@ with open(open_path + snip_file, 'r') as jf:
 # print('new splits: {} train, {} val, {} test'.format(len(new_splits['train']), len(new_splits['val']), len(new_splits['test'])))
 # print('----------------------------')
 
-print_list = []
-for d in data:
-    for item in d.items():
-        if item[0] not in ['perspective_coordinates', 'json_id', 'orig_experiment_id', 'from_aug_data', 'prev_config', 'built_config']:
-            if item[0] == 'sample_id':
-                print_list.append('---SAMPLE id: {} ***----'.format(str(item[1])))
-            elif item[0] == 'next_builder_actions':
-                print_list.append('next builder actions:')
-                for move in item[1]:
-                    pp = move.get_action()
-                    coord = move.get_coords()
-                    print_list.append(pp + ' ' + coord[0] + ' ' + coord[1] + ' ' + coord[2] + ' ' + coord[3])
-                    print_list.append('---------------')
-            else:
-                print_list.append(item[0])
-                print_list.append(str(item[1]))
+##this below was to check the output
+# print_list = []
+# for d in data:
+#     for item in d.items():
+#         if item[0] not in ['perspective_coordinates', 'json_id', 'orig_experiment_id', 'from_aug_data', 'prev_config', 'built_config']:
+#             if item[0] == 'sample_id':
+#                 print_list.append('---SAMPLE id: {} ***----'.format(str(item[1])))
+#             elif item[0] == 'next_builder_actions':
+#                 print_list.append('next builder actions:')
+#                 for move in item[1]:
+#                     pp = move.get_action()
+#                     coord = move.get_coords()
+#                     print_list.append(pp + ' ' + coord[0] + ' ' + coord[1] + ' ' + coord[2] + ' ' + coord[3])
+#                     print_list.append('---------------')
+#             else:
+#                 print_list.append(item[0])
+#                 print_list.append(str(item[1]))
 
-    print_list.append('-------------------------------------------------------------')
+#     print_list.append('-------------------------------------------------------------')
 
-print_string = '\n'.join(print_list)
-with open (current_folder + '/' + 'C154-B29-A1' + '-bap.txt', 'w') as txt_file:
-    txt_file.write(print_string)
+# print_string = '\n'.join(print_list)
+# with open (current_folder + '/' + 'C154-B29-A1' + '-bap.txt', 'w') as txt_file:
+#     txt_file.write(print_string)
     
-##save json
-# now = datetime.datetime.now().strftime("%Y-%m-%d")
+#save json
+now = datetime.datetime.now().strftime("%Y-%m-%d")
 
-# with open(json_save_path + snip_file.strip('.json') + '_' + now + '.json', 'w') as outfile:
-#     json.dump(data, outfile)
+with open(current_folder  + '/snippets_' + now + '.json', 'w') as outfile:
+    json.dump(final_snippets, outfile)
 
-# print('json saved')
+print('json saved')
 
   
             

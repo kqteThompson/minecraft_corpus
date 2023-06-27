@@ -163,7 +163,7 @@ def get_built_config(prev_config, actions):
         b = {}
         b['y'] = block[2]
         b['x'] = block[1]
-        b['Z'] = block[3]
+        b['z'] = block[3]
         # b['type'] = 'cwc_minecraft_' + block[0] + '_rn'
         b['type'] = block[0]
         built_config.append(b)
