@@ -2,6 +2,11 @@
 Takes a json of games and sample ids to remove from the BAP data 
 returns an amended data set to run anyway
 snippets = {game_id : [list of sample ids to keep]}
+
+len of train data 4453
+1082 samples skipped
+161 games replaces with our snippets
+
 """
 import os
 import json
@@ -12,7 +17,7 @@ from utils import BuilderAction
 current_folder=os.getcwd()
 
 #open json
-json_open = current_folder + '/snippets_2023-06-25.json'
+json_open = current_folder + '/snippets_2023-06-29.json'
 #open train_data
 data_open = current_folder + '/generated_data/train-jsons.pkl'
 

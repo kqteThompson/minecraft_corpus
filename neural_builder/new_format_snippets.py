@@ -28,7 +28,7 @@ open_path = '/home/kate/minecraft_corpus/snippets/snippets_out/'
 contents = os.listdir(open_path) 
 # snip_file = contents[0]
 #snip_file = '2023-06-09_1_snippets.json'
-snip_file = '2023-06-19_162_snippets.json'
+snip_file = '2023-06-29_256_snippets.json'
 
 json_files = os.listdir(open_path)
 
@@ -43,10 +43,11 @@ observation_files = os.listdir(observation_path)
 data = []
 final_snippet_split = []
 done_count = 0
+passed = 0
 with open(open_path + snip_file, 'r') as jf:
     jfile = json.load(jf)
     for game in jfile:
-    # for game in [g for g in jfile if g['id'] == 'C32-B53-A15']:
+    #for game in [g for g in jfile if g['id'] == 'C106-B37-A23']:
         game_list = []#use this to store each snippet in order
         game_id = game['id']
         final_snippet_split.append(game_id.split('-')[0]) 
@@ -102,30 +103,37 @@ with open(open_path + snip_file, 'r') as jf:
             last_speaker = dp['utt_snips'][-1][0]
             last_utt_toks = dp['utt_snips'][-1][1]
             # last_speaker = dp['prev_utterances'][-1]['speaker']
-            # last_utt_toks = dp['prev_utterances'][-1]['utterance']
+            #last_utt_toks = dp['prev_utterances'][-1]['utterance']
             # print(last_speaker)
             # print(last_utt_toks)
-            # print('-----OUTER CIRCLE------')
+
             i, bpos, pconf = return_state_info(worldstates, last_speaker, last_utt_toks, wi)
-            # print('index: {}'.format(i))
-            # print(bpos)
-            wi = i + 1 
-            # #SAMPLE ID 
-            # #PREVIOUS BUILDER POSITION
-            # #PREVIOUS CONFIG
-            dp['sample_id'] = i + 1 #need to add 1 to match with original BAP sample id
-            # dp['from_aug_data'] = False
-            # dp['prev_builder_position'] = bpos
-            # dp['prev_config'] = pconf
-            # #BUILT CONFIG
-            # bconf = get_built_config(dp['prev_config'], dp['next_builder_actions'])
-            # dp['built_config'] = bconf
+            if bpos == None:
+                #probably because couldn't match the speaker
+                passed += 1
+                pass
 
-            # #PERSPECTIVE COORDINATES
-            # dp['perspective_coordinates'] = torch.tensor(get_perspective_coord_repr(bpos))
+            else:
+                # print('index: {}'.format(i))
+                # print(bpos)
+                wi = i + 1 
+                # #SAMPLE ID 
+                # #PREVIOUS BUILDER POSITION
+                # #PREVIOUS CONFIG
+                dp['sample_id'] = i + 1 #need to add 1 to match with original BAP sample id
+                # dp['from_aug_data'] = False
+                # dp['prev_builder_position'] = bpos
+                # dp['prev_config'] = pconf
+                # #BUILT CONFIG
+                # bconf = get_built_config(dp['prev_config'], dp['next_builder_actions'])
+                # dp['built_config'] = bconf
 
-            data.append(dp)
+                # #PERSPECTIVE COORDINATES
+                # dp['perspective_coordinates'] = torch.tensor(get_perspective_coord_repr(bpos))
 
+                data.append(dp)
+
+print('{} snippets passed'.format(str(passed)))
 ##RETURN JSON OF SNIPPETS TO KEEP
 snippets = defaultdict(list)
 # final_snippets = []
@@ -141,16 +149,16 @@ final_snippets = {k:v for k,v in snippets.items()}
 #     final_snippets.append(json_format)
 
 
-# # RETURN NEW SPLITS
-# with open(current_folder + '/orig_splits.json', 'r') as s:
-#     splitjson = json.load(s)
-#     new_splits = get_splits(splitjson, final_snippet_split)
+# RETURN NEW SPLITS
+with open(current_folder + '/orig_splits.json', 'r') as s:
+    splitjson = json.load(s)
+    new_splits = get_splits(splitjson, final_snippet_split)
 
-# with open(current_folder + '/new_splits.json', 'w') as outfile:
-#     json.dump(new_splits, outfile)
-# print('new splits json saved')
-# print('new splits: {} train, {} val, {} test'.format(len(new_splits['train']), len(new_splits['val']), len(new_splits['test'])))
-# print('----------------------------')
+with open(current_folder + '/new_splits.json', 'w') as outfile:
+    json.dump(new_splits, outfile)
+print('new splits json saved')
+print('new splits: {} train, {} val, {} test'.format(len(new_splits['train']), len(new_splits['val']), len(new_splits['test'])))
+print('----------------------------')
 
 ##this below was to check the output
 # print_list = []

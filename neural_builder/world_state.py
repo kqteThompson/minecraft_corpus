@@ -126,6 +126,7 @@ def return_state_info(worldstates, speaker, utterance, start_index):
                         prev_config = format_prev_config(log['BlocksInGrid'])
                         #break
                         return sample_id, prev_builder_position, prev_config
+    return start_index - 1, None, None
 
 def get_built_config(prev_config, actions):
     """

@@ -147,7 +147,7 @@ def squish_text(elements):
     return squished 
 
 #for f in json_files:
-for f in [s for s in json_files if s == 'SILVER_2023-06-12.json']:
+for f in [s for s in json_files if s == 'SILVER_2023-06-29.json']:
     linguistic_cdus = [] # a list of the uncaught linguistic CDUs
     with open(open_path + f, 'r') as jf:
         jfile = json.load(jf)

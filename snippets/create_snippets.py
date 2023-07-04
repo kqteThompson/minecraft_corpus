@@ -1,7 +1,7 @@
 """
 Takes a json file of ANNOTATED games that have been flattened 
 and squished.
-Returns json ready for BERT
+Returns a set of snippets
 """
 import os 
 import json 
@@ -55,7 +55,7 @@ def _remove_corrections(snips, corrections):
 
 current_folder=os.getcwd()
 
-open_path = '/home/kate/minecraft_corpus/flatten/json_flat/2023-06-19_squish.json'
+open_path = '/home/kate/minecraft_corpus/flatten/json_flat/2023-06-29_squish.json'
 
 save_path= current_folder + '/snippets_out/'
 

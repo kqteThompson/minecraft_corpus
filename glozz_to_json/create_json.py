@@ -17,10 +17,8 @@ ac_path = current_folder + '/ac_files/'
 # ac_path = current_folder + '/test_batch_ac_files/'
 # ac_path = '/home/kate/glozz_platform/glozz-platform-dist-2.1/minecraft_data/corpus/'
 
-# aa_path = current_folder + '/aa_files/'
-# aa_path = '/home/kate/cocobots_annotations/bronze_test_holdout/'
-#aa_path = current_folder + '/to_squish_aa/'
-aa_path = '/home/kate/glozz_platform/glozz-platform-dist-2.1/minecraft_data/annotations/'
+aa_path = current_folder + '/aa_files/'
+# aa_path = '/home/kate/glozz_platform/glozz-platform-dist-2.1/minecraft_data/annotations/'
 
 save_path= current_folder + '/json_output/'
 
