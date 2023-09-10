@@ -7,19 +7,19 @@ import os
 from genglozzsegments import get_format
 import json
 
-predicted_relations = '2023-03-28BRONZE_dev_bert.json'
+predicted_relations = 'bert_multi_preds_67.json'
 
 current_folder=os.getcwd()
 
-# json_path = current_folder + '/' + predicted_relations
+json_path = current_folder + '/' + predicted_relations
 
 # json_path = '/home/kate/minecraft_corpus/bert/json_out/' + predicted_relations
 
-json_path = '/home/kate/minecraft_corpus/bert/json_out_val_batch/2023-05-29_SILVER_dev_100_squish_bert.json'
+# json_path = '/home/kate/minecraft_corpus/bert/json_out_val_batch/2023-05-29_SILVER_dev_100_squish_bert.json'
 
 
 # save_path= current_folder + '/glozz_squished/'
-save_path= current_folder + '/glozz_squished_val/'
+save_path= current_folder + '/preds_67_output/'
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
 
@@ -28,9 +28,9 @@ with open(json_path, 'r') as jf:
 
 for game in preds:
     ac_file, aa_file, dialogue_id = get_format(game)
-    with open (save_path + '/' + dialogue_id + '_squished.aa', 'w') as xml_file:
+    with open (save_path + '/' + dialogue_id + '_pred.aa', 'w') as xml_file:
         xml_file.write(aa_file)
-    with open (save_path + '/' + dialogue_id + '_squished.ac', 'w') as text_file:
+    with open (save_path + '/' + dialogue_id + '_pred.ac', 'w') as text_file:
         text_file.write(ac_file)
     print('dialogue done', dialogue_id)
 

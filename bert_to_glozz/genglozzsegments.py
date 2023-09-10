@@ -75,6 +75,7 @@ def get_format(game):
     ac_string = ' '
 
     dialogue_id = game['id']
+    print(dialogue_id)
 
     para_start_pos = 1
     turn_no = 0
@@ -192,7 +193,8 @@ def get_format(game):
         xml_start.extend(seg_xml)
 
     #now add relations to xml
-    for rel in game['relations']:
+    # for rel in game['relations']:
+    for rel in game['pred_relations']:
         source = edu_id_dict[str(rel['x'])]
         target = edu_id_dict[str(rel['y'])]
         reltype = rel['type']
