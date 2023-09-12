@@ -55,7 +55,7 @@ def _remove_corrections(snips, corrections):
 
 current_folder=os.getcwd()
 
-open_path = '/home/kate/minecraft_corpus/flatten/json_flat/2023-06-29_squish.json'
+open_path = '/home/kate/minecraft_corpus/flatten/json_flat/2023-08-28_squish.json'
 
 save_path= current_folder + '/snippets_out/'
 
@@ -115,7 +115,7 @@ with open(open_path, 'r') as jf:
     print('{} total snippets and {} without correction'.format(total_snippets, total_minus_corrections))
     
     #count the number of snippets that include more than one set of moves
-    #if remove_multi_speaker == 'yes': !! REMOVE by defalt for the moment
+    #if remove_multi_speaker == 'yes': !! REMOVE by default for the moment
     #ALSO count snippets that don't contain any moves and record. REMOVE by 
     #default for the moment. 
     #return 'final games' which is all the snippets that are not multi move

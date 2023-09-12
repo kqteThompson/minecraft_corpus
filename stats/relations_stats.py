@@ -138,7 +138,21 @@ def find_longest_rels(data, length):
         lens = Counter([i for i in c if i >= length[0]])
         if lens:
             print('----{}----'.format(t))
-            for l in lens.items():
-                print('length: {}, number: {}'.format(l[0], l[1]))
+            total = 0
+            for k in sorted(lens.keys()):
+                #order by ascending length 
+                print('length: {}, number: {}'.format(k, lens[k]))
+                total += lens[k]
+            print('TOTAL : {}'.format(total))
+            # for l in lens.items():
+            #     print('length: {}, number: {}'.format(l[0], l[1]))
+    return None
+
+def rels_within_cutoff(data, length):
+    totals = defaultdict(list)
+    for d in data:
+        for rel in d['relations']:
+            totals[rel['type']].append(abs(rel['x']-rel['y']))
+
     return None
     
