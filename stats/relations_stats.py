@@ -3,6 +3,7 @@ functions for basic game stats called in stats.py
 """
 from collections import defaultdict, Counter
 from statistics import mode
+import pandas
 
 #number of games
 #number of turns
@@ -11,32 +12,145 @@ from statistics import mode
 #number of multi-parent edus
 #breakdown of multi-parent edus
 
+labels_map = {'Comment': 0, 'Contrast': 1, 'Correction': 2, 'Question-answer_pair': 3, 'Parallel': 4, 'Acknowledgement': 5,
+            'Elaboration': 6, 'Clarification_question': 7, 'Conditional': 8, 'Continuation': 9, 'Result': 10, 'Explanation': 11,
+            'Q-Elab': 12, 'Alternation': 13, 'Narration': 14, 'Confirmation_question': 15, 'Sequence' : 17, 'Background': 18}
+
+reverse_map = {0: 'Comment', 1:'Contrast', 2:'Correction', 3:'QAP', 4:'Parallel', 5:'Acknowledgement',
+            6:'Elaboration', 7:'Clarification_question', 8:'Conditional', 9:'Continuation', 10:'Result', 11:'Explanation',
+            12:'Q-Elab', 13:'Alternation', 14:'Narration', 15:'Conf-Q', 17:'Sequence', 18:'Background'}
+
 def num_games(data):
     games = [d['id'] for d in data]
     return len(games)
 
+def contains_number(string):
+    return any(char.isdigit() for char in string)
 
-def relations(data):
+def is_nl(edu):
+    """
+    if every word in alphanumeric
+    """
+    nl = 1
+    words = edu.split(' ')
+    # print(words)
+    for word in [w for w in words if w != '']:
+        if not contains_number(word):
+            nl = 0
+            break
+    return nl
+
+def edu_types_by_relation(data):
+    """
+    0 = NL move
+    1 = L move
+    """
+    rels_forward = defaultdict(list)
+    backwards = defaultdict(list)
+    for game in data:
+        edus = game['edus']
+        edu_types = []
+        #a list of edus as types...the location of the edu will be its index in the list
+        for edu in edus:
+            if edu['speaker'] == 'Builder' and is_nl(edu['text']):
+                edu_types.append(0)
+            else:
+                edu_types.append(1)
+        for rel in game['relations']:
+            if int(rel['x']) > int(rel['y']):
+                backwards[rel['type']].append((edu_types[int(rel['y'])], edu_types[int(rel['x'])]))
+            else:
+                rels_forward[rel['type']].append((edu_types[int(rel['x'])], edu_types[int(rel['y'])]))
+        #get a dict with relation types as keys and list of tuples for endpoint type pairs 
+    # print(rels_forward.keys())
+    # print(backwards['Comment'])
+    #reformat dict for printing
+    labels = []
+    data = []
+    head = ['Lin-Lin', 'Lin-NL', 'NL-Lin', 'NL-NL', 'Total']
+    for k in rels_forward.keys():
+        labels.append(k)
+        counts = Counter(rels_forward[k])
+        data.append([counts[(1,1)], counts[(1,0)], counts[(0,1)], counts[(0,0)], len(rels_forward[k])])
+
+    print('Forward Relations')
+    print('                                         ')
+    print(pandas.DataFrame(data, labels, head))
+    print('                                         ')
+        
+    labels = []
+    data = []
+    head = ['Lin-Lin', 'Lin-NL', 'NL-Lin', 'NL-NL', 'Total']
+    for k in backwards.keys():
+        labels.append(k)
+        counts = Counter(backwards[k])
+        data.append([counts[(1,1)], counts[(1,0)], counts[(0,1)], counts[(0,0)], len(backwards[k])])
+
+    print('Backwards Relations')
+    print('                                         ')
+    print(pandas.DataFrame(data, labels, head))
+    print('                                         ')
+
+    return None
+
+
+def relations(data, maxlen):
+    cutoff = maxlen[0]
     rels_all = defaultdict(list)
     backwards = defaultdict(list)
-    total = []
-    for d in data:
-        for rel in d['relations']:
+    for game in data:
+        for rel in game['relations']:
             length = abs(rel['y'] - rel['x'])
-            total.append(length)
+            
             if rel['x'] > rel['y']:
                 backwards[rel['type']].append(length)
-            rels_all[rel['type']].append(length)
-    print('total number of relations: {}'.format(len(total)))
-    print('Longest relation: length {}'.format(max(total)))
-    print('------ALL RELATIONS-----\n')
-    for r in rels_all.items():
-        print('{} : {} instances'.format(r[0], len(r[1])))
-        print('\n max length : {} \n min length : {} \n mode : {} \n'.format(max(r[1]), min(r[1]), mode(r[1])))
-    print('------BACKWARDS-----\n')
-    for b in backwards.items(): 
-        print('{} : {} instances'.format(b[0], len(b[1])))
-        print('\n max length : {} \n min length : {} \n mode : {} \n'.format(max(b[1]), min(b[1]), mode(b[1])))
+            else:
+                rels_all[rel['type']].append(length)
+    #get counts for each type
+
+    head = ['Total']
+    labels = []
+    data = []
+    len_range = [i for i in range(1,cutoff+1)]
+
+    head.extend([str(l) for l in len_range])
+    head.extend(['num over', 'max'])
+
+    for k in rels_all.keys():
+        labels.append(k)
+        under = Counter([r for r in rels_all[k] if r <= cutoff])
+        over = [r for r in rels_all[k] if r > cutoff]
+        d = []
+        d.append(len(rels_all[k]))
+        for n in len_range:
+            d.append(under[n])
+        d.append(len(over))
+        d.append(max(rels_all[k]))
+        data.append(d)
+
+    print('Forward Relations')
+    print('                                         ')
+    print(pandas.DataFrame(data, labels, head))
+    print('                                          ')
+    
+    labels = []
+    data = []
+    for k in backwards.keys():
+        labels.append(k)
+        under = Counter([r for r in backwards[k] if r <= cutoff])
+        over = [r for r in backwards[k] if r > cutoff]
+        d = []
+        d.append(len(backwards[k]))
+        for n in len_range:
+            d.append(under[n])
+        d.append(len(over))
+        d.append(max(backwards[k]))
+        data.append(d)
+
+    print('Backwards Relations')
+    print('                                         ')
+    print(pandas.DataFrame(data, labels, head))
+    print('                                          ')
 
     return None
 
@@ -60,6 +174,37 @@ def corrections(data):
     print('----{} games with no corrections----'.format(len(z)))
     for g in z:
         print(g)
+    return None
+
+def multi_parents(data):
+    totals = []
+    for d in data:
+        cnt = defaultdict(list)
+        for rel in d['relations']:
+            cnt[rel['y']].append(labels_map[rel['type']])
+        totals.extend([c[1] for c in cnt.items() if len(c[1]) > 1])
+    #so now should have totals list that is all the relation types for multi parent edus
+    total_counts = defaultdict(list)
+    all_lengths = []
+    for t in totals:
+        l = len(t)
+        all_lengths.append(len(t)) #to figure out the range of lens
+        for i in t:
+            total_counts[i].append(l)
+    #so now you have a dict with relation types as keys and multi parent nums as values
+    head = list(set(all_lengths))
+    head.sort()
+    labels = []
+    data = []
+    for k in total_counts.keys():
+        labels.append(reverse_map[k])
+        counts = Counter(total_counts[k])
+        data.append([counts[n] for n in head])
+
+    print('Relations in multi-parent edus')
+    print('                                         ')
+    print(pandas.DataFrame(data, labels, head))
+    print('                                         ')   
     return None
 
 def parents(data):

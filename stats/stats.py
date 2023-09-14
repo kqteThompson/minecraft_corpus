@@ -14,9 +14,11 @@ arg_parser.add_argument("--relations", default=False, action='store_true', help=
 arg_parser.add_argument("--parents", default=False, action='store_true', help='returns number of edus with >1 parent')
 arg_parser.add_argument("--corrections", default=False, action='store_true', help='returns game and num correction relations')
 arg_parser.add_argument("--candidates", default=False, action='store_true', help='returns number of candidates for a particular cutoff')
-arg_parser.add_argument("--num", type=int, nargs='+', help='specify particular cutoff for --candidates arg')
+arg_parser.add_argument("--num", type=int, nargs='+', help='specify particular cutoff for --candidates or --relations')
 arg_parser.add_argument("--undersample", type=int, nargs='+', help='specify number of 0 cands to drop if wanting to keep this balance')
 arg_parser.add_argument("--longest_rels", type=int, nargs=1, help='returns a list of relation types with len >= num')
+arg_parser.add_argument("--edu_types", default=False, action='store_true', help='returns a list of relation types edu type breakdown')
+arg_parser.add_argument("--multiparents", default=False, action='store_true', help='rel types for >1 parent edus')
 
 args = arg_parser.parse_args()
 
@@ -46,7 +48,10 @@ if args.relations:
     #number of relations
     #breakdown of relation types
     #number of backwards relations
-    relations_stats.relations(data)
+    if args.num:
+        relations_stats.relations(data, args.num)
+    else:
+        print('Need to specify cutoff distance in --num')
 if args.corrections:
     relations_stats.corrections(data)
 if args.parents:
@@ -58,4 +63,9 @@ if args.candidates:
         relations_stats.candidates(data)
 if args.longest_rels:
     relations_stats.find_longest_rels(data, args.longest_rels)
+if args.edu_types:
+    relations_stats.edu_types_by_relation(data)
+if args.multiparents:
+    relations_stats.multi_parents(data)
+
 
