@@ -2,8 +2,10 @@
 functions for basic game stats called in stats.py
 """
 from collections import defaultdict, Counter
-from statistics import mode
+from statistics import mean, median, mode
 import pandas
+import numpy 
+import matplotlib.pyplot as plt
 
 #number of games
 #number of turns
@@ -21,8 +23,26 @@ reverse_map = {0: 'Comment', 1:'Contrast', 2:'Correction', 3:'QAP', 4:'Parallel'
             12:'Q-Elab', 13:'Alternation', 14:'Narration', 15:'Conf-Q', 17:'Sequence', 18:'Background'}
 
 def num_games(data):
-    games = [d['id'] for d in data]
-    return len(games)
+    games = [len(d['edus']) for d in data]
+    num_games = len(games)
+    print('Total games: {}'.format(num_games))
+
+    dist = Counter(games)
+    # labels, values = zip(*dist.items())
+    # indexes = numpy.arange(len(labels))
+    # width = 1
+
+    # plt.bar(indexes, values, width)
+    # plt.xticks(indexes + width * 0.5, labels)
+    # plt.show()
+
+    print('Game len | Number')
+    dist = Counter(games)
+    for k in sorted(dist.keys()):
+        print('{} ----- {}'.format(k, dist[k]))
+    print('Mean : ', float(f'{mean(games):.1f}'))
+    print('Median : {} \n Mode: {} \n Min: {} \n Max: {}'.format(median(games), mode(games), min(games), max(games)))
+    return None
 
 def contains_number(string):
     return any(char.isdigit() for char in string)

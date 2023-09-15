@@ -9,7 +9,7 @@ import relations_stats
 
 arg_parser = argparse.ArgumentParser(description='generate minecraft games stats')
 arg_parser.add_argument('json_file_name', metavar='CORPFILE', help='name of json file with games')
-arg_parser.add_argument("--games", default=False, action='store_true', help='give num games') 
+arg_parser.add_argument("--games", default=False, action='store_true', help='give num games and dist of game lengths') 
 arg_parser.add_argument("--relations", default=False, action='store_true', help='asdfsdf')
 arg_parser.add_argument("--parents", default=False, action='store_true', help='returns number of edus with >1 parent')
 arg_parser.add_argument("--corrections", default=False, action='store_true', help='returns game and num correction relations')
