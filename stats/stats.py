@@ -20,13 +20,16 @@ arg_parser.add_argument("--longest_rels", type=int, nargs=1, help='returns a lis
 arg_parser.add_argument("--edu_types", default=False, action='store_true', help='returns a list of relation types edu type breakdown')
 arg_parser.add_argument("--multiparents", default=False, action='store_true', help='rel types for >1 parent edus')
 
+arg_parser.add_argument("--prep_outputs", default=False, action='store_true', help='changes field names on bert output')
+arg_parser.add_argument("--save_name", type=str, nargs='+', help='specify new file name')
+
 args = arg_parser.parse_args()
 
 current_dir = os.getcwd()
 
 ##try to open json file and check turns 
 
-json_path = current_dir + '/' + args.json_file_name
+json_path = current_dir + '/jsons/' + args.json_file_name
 
 try:
     with open(json_path, 'r') as f: 
@@ -67,5 +70,10 @@ if args.edu_types:
     relations_stats.edu_types_by_relation(data)
 if args.multiparents:
     relations_stats.multi_parents(data)
+if args.prep_outputs:
+    new = relations_stats.prep(data)
+    with open(current_dir + '/jsons/' + args.save_name[0] + '_prep.json', 'w') as outfile:
+        json.dump(new, outfile)
+    print('new json saved!')
 
 

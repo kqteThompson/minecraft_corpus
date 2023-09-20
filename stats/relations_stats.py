@@ -6,6 +6,7 @@ from statistics import mean, median, mode
 import pandas
 import numpy 
 import matplotlib.pyplot as plt
+import os
 
 #number of games
 #number of turns
@@ -21,6 +22,24 @@ labels_map = {'Comment': 0, 'Contrast': 1, 'Correction': 2, 'Question-answer_pai
 reverse_map = {0: 'Comment', 1:'Contrast', 2:'Correction', 3:'QAP', 4:'Parallel', 5:'Acknowledgement',
             6:'Elaboration', 7:'Clarification_question', 8:'Conditional', 9:'Continuation', 10:'Result', 11:'Explanation',
             12:'Q-Elab', 13:'Alternation', 14:'Narration', 15:'Conf-Q', 17:'Sequence', 18:'Background'}
+
+def prep(data):
+    """changes predicted relations field to relations in bert output file"""
+    full_amended = []
+    for d in data:
+        amended = {}
+        amended['id']= d['id']
+        amended['edus'] = d['edus']
+        rels = d['pred_relations']
+        new_rels = []
+        #make sure pred indicies are ints
+        for rel in rels:
+            rel['x'] = int(rel['x'])
+            rel['y'] = int(rel['y'])
+            new_rels.append(rel)
+        amended['relations'] = new_rels
+        full_amended.append(amended)
+    return full_amended
 
 def num_games(data):
     games = [len(d['edus']) for d in data]

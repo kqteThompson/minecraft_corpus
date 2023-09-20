@@ -23,6 +23,14 @@ def convert_rels(relist, rel_labels):
         newlist.append(tuple([int(r['x']), int(r['y']), rel_labels[r['type']]]))
     return newlist
 
+# def find_multi_parents(relist):
+#     """takes a list of relations and returns a list of lists of multi relation types"""
+#     cnt = defaultdict(list)
+#     for rel in relist:
+#         cnt[rel[1]].append(rel[2])
+#     multi_types = [c[1] for c in cnt.items() if len(c[1]) > 1]
+#     return multi_types
+
 def get_scores(datalist):
     """returns precision, recall and f1 for one relation type"""
     tp = sum(datalist[1])
@@ -42,13 +50,13 @@ def get_scores(datalist):
 current_dir = os.getcwd()
 
 ##try to open json file and check turns 
-# gold_annotations = 'TEST_67_bert.json'
-# bert_output = 'bert_multi_preds_67.json'
-gold_annotations = 'TEST_30_bert.json'
-bert_output = 'bert_multi_preds_30.json'
+# gold_annotations = 'TEST_30_bert.json'
+# bert_output = 'bert_multi_preds_30.json'
+gold_annotations = 'TEST_30_minus_narr-corr.json'
+bert_output = 'bert_multi_preds_30_nocn.json'
 
-gold = current_dir + '/' + gold_annotations
-predicted = current_dir + '/' + bert_output
+gold = current_dir + '/jsons/' + gold_annotations
+predicted = current_dir + '/jsons/' + bert_output
 
 try:
     with open(gold, 'r') as f: 
@@ -67,6 +75,11 @@ except IOError:
 gold_dict = defaultdict(list)
 true_pos_dict = defaultdict(list)
 false_pos_dict = defaultdict(list)
+
+#add multi parent information here
+#simply add the relation types
+true_pos_multi_cnt = []
+false_pos_multi_cnt = []
 
 max_len = 10
 
@@ -89,6 +102,14 @@ for game in gold_data:
                 true_pos.append(rel)
             else:
                 false_pos.append(rel)
+        #add to multiparent counts
+        # mppos = find_multi_parents(true_pos)
+        # if len(mppos) > 0:
+        #     true_pos_multi_cnt.extend(mppos)
+        # mpfls = find_multi_parents(false_pos)
+        # if len(mpfls) > 0:
+        #     false_pos_multi_cnt.extend(mpfls)
+        
         if len(trans_bert_rels) != (len(true_pos) + len(false_pos)):
             print('Not all rels accounted for in {} : {} != {} + {}'.format(gold_id, len(trans_bert_rels), (len(true_pos), len(false_pos))))
             print('Skipping game.')
@@ -104,32 +125,34 @@ for game in gold_data:
         gold_dict[reverse_map[i[2]]].append(abs(i[0]-i[1]))
 
 print('Done with first counts')
+#so sometimes there is no data for a certain relation type in the predicted data
 
 final_dict = defaultdict(list)
-for dictionary in [gold_dict, true_pos_dict, false_pos_dict]:
-    for key in list(dictionary.keys()):
-        lens = Counter([d for d in dictionary[key] if d <= max_len])
-        final_lens = []
-        for dist in range(1,11):
-            num = lens[dist]
-            final_lens.append(num)
-        final_dict[key].append(final_lens)
+for key in list(gold_dict.keys()):
+    lens = Counter([d for d in gold_dict[key] if d <= max_len])
+    final_lens = []
+    for dist in range(1,max_len+1):
+        num = lens[dist]
+        final_lens.append(num)
+    final_dict[key].append(final_lens)
+    for dictionary in [true_pos_dict, false_pos_dict]:
+        final_predlens = []
+        if key in dictionary.keys():
+            predlens = Counter([d for d in dictionary[key] if d <= max_len])
+            for dist in range(1, max_len+1):
+                nums = predlens[dist]
+                final_predlens.append(nums)
+        else:
+            print('NO {} relation in dict'.format(key))
+            nums = [0 for i in range(1, max_len+1)]
+            final_predlens = nums
 
-print(list(final_dict.keys()))
-print(final_dict['Conditional'])
+        final_dict[key].append(final_predlens)
 
 #check that all have three lists
 for rel_type in list(final_dict.keys()):
     if len(final_dict[rel_type]) < 3:
         print('{} only has {} row'.format(rel_type, len(final_dict[rel_type])))
-
-final_dict['Conditional'].extend([[0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0]])
-final_dict['Explanation'].extend([[0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0]])
-final_dict['Sequence'] = [final_dict['Sequence'][0], [0,0,0,0,0,0,0,0,0,0], final_dict['Sequence'][1]]
-
-print(final_dict['Explanation'])
-print(final_dict['Conditional'])
-print(final_dict['Sequence'])
 
 #print tables
 
@@ -150,7 +173,51 @@ for rel_type in list(final_dict.keys()):
     print('                                         ')
 
 
+#make true and false positive multi parent counts
+#so now should have totals list that is all the relation types for multi parent edus
+# tru_multi_counts = defaultdict(list)
+# all_lengths = []
+# for t in true_pos_multi_cnt:
+#     l = len(t)
+#     all_lengths.append(len(t)) #to figure out the range of lens
+#     for i in t:
+#         tru_multi_counts[i].append(l)
 
+# head = list(set(all_lengths))
+# head.sort()
+# labels = []
+# data = []
+# for k in tru_multi_counts.keys():
+#     labels.append(reverse_map[k])
+#     counts = Counter(tru_multi_counts[k])
+#     data.append([counts[n] for n in head])
+# print('True positive relations in multi-parent edus')
+# print('                                         ')
+# print(pandas.DataFrame(data, labels, head))
+# print('                                         ')   
+
+
+# false_multi_counts = defaultdict(list)
+# all_lengths = []
+# for t in false_pos_multi_cnt:
+#     l = len(t)
+#     all_lengths.append(len(t)) #to figure out the range of lens
+#     for i in t:
+#         false_multi_counts[i].append(l)
+
+# head = list(set(all_lengths))
+# head.sort()
+# labels = []
+# data = []
+# for k in false_multi_counts.keys():
+#     labels.append(reverse_map[k])
+#     counts = Counter(false_multi_counts[k])
+#     data.append([counts[n] for n in head])
+
+# print('False positive relations in multi-parent edus')
+# print('                                         ')
+# print(pandas.DataFrame(data, labels, head))
+# print('                                         ')  
 
 
 
