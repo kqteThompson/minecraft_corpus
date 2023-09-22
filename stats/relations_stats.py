@@ -6,7 +6,7 @@ from statistics import mean, median, mode
 import pandas
 import numpy 
 import matplotlib.pyplot as plt
-import os
+import sys
 
 #number of games
 #number of turns
@@ -22,24 +22,6 @@ labels_map = {'Comment': 0, 'Contrast': 1, 'Correction': 2, 'Question-answer_pai
 reverse_map = {0: 'Comment', 1:'Contrast', 2:'Correction', 3:'QAP', 4:'Parallel', 5:'Acknowledgement',
             6:'Elaboration', 7:'Clarification_question', 8:'Conditional', 9:'Continuation', 10:'Result', 11:'Explanation',
             12:'Q-Elab', 13:'Alternation', 14:'Narration', 15:'Conf-Q', 17:'Sequence', 18:'Background'}
-
-def prep(data):
-    """changes predicted relations field to relations in bert output file"""
-    full_amended = []
-    for d in data:
-        amended = {}
-        amended['id']= d['id']
-        amended['edus'] = d['edus']
-        rels = d['pred_relations']
-        new_rels = []
-        #make sure pred indicies are ints
-        for rel in rels:
-            rel['x'] = int(rel['x'])
-            rel['y'] = int(rel['y'])
-            new_rels.append(rel)
-        amended['relations'] = new_rels
-        full_amended.append(amended)
-    return full_amended
 
 def num_games(data):
     games = [len(d['edus']) for d in data]
@@ -112,6 +94,7 @@ def edu_types_by_relation(data):
         counts = Counter(rels_forward[k])
         data.append([counts[(1,1)], counts[(1,0)], counts[(0,1)], counts[(0,0)], len(rels_forward[k])])
 
+    sys.stdout = open('stats_EDU_types.txt', 'w')
     print('Forward Relations')
     print('                                         ')
     print(pandas.DataFrame(data, labels, head))
@@ -129,9 +112,8 @@ def edu_types_by_relation(data):
     print('                                         ')
     print(pandas.DataFrame(data, labels, head))
     print('                                         ')
-
+    sys.stdout.close()
     return None
-
 
 def relations(data, maxlen):
     cutoff = maxlen[0]
@@ -167,11 +149,15 @@ def relations(data, maxlen):
         d.append(max(rels_all[k]))
         data.append(d)
 
+    sys.stdout = open('stats_Relations.txt', 'w')
     print('Forward Relations')
     print('                                         ')
     print(pandas.DataFrame(data, labels, head))
     print('                                          ')
-    
+    # sys.stdout.close()
+    # pandas.DataFrame(data, labels, head).to_csv('datatest.txt', sep='\t', index=False)
+    # pandas.DataFrame(data, labels, head).to_csv('datatest.txt', sep='\t', index=False)
+
     labels = []
     data = []
     for k in backwards.keys():
@@ -190,6 +176,8 @@ def relations(data, maxlen):
     print('                                         ')
     print(pandas.DataFrame(data, labels, head))
     print('                                          ')
+
+    sys.stdout.close()
 
     return None
 
@@ -212,7 +200,7 @@ def corrections(data):
         print('{} corrections {}'.format(g[0], g[1]))
     print('----{} games with no corrections----'.format(len(z)))
     for g in z:
-        print(g)
+        print('{} has a length of {}'.format(g, len(g)))
     return None
 
 def multi_parents(data):
@@ -240,10 +228,13 @@ def multi_parents(data):
         counts = Counter(total_counts[k])
         data.append([counts[n] for n in head])
 
+    sys.stdout = open('stats_Multi_parents.txt', 'w')
     print('Relations in multi-parent edus')
     print('                                         ')
     print(pandas.DataFrame(data, labels, head))
     print('                                         ')   
+
+    sys.stdout.close()
     return None
 
 def parents(data):

@@ -5,6 +5,7 @@ Takes a gold json and bert output json and returns a comparison by type and rela
 """
 import os
 import json
+import sys
 from collections import defaultdict, Counter
 import pandas 
 
@@ -50,10 +51,10 @@ def get_scores(datalist):
 current_dir = os.getcwd()
 
 ##try to open json file and check turns 
-# gold_annotations = 'TEST_30_bert.json'
-# bert_output = 'bert_multi_preds_30.json'
-gold_annotations = 'TEST_30_minus_narr-corr.json'
-bert_output = 'bert_multi_preds_30_nocn.json'
+gold_annotations = 'TEST_30_bert.json'
+bert_output = 'bert_multi_preds_30.json'
+# gold_annotations = 'TEST_30_minus_narr-corr.json'
+# bert_output = 'bert_multi_preds_30_nocn.json'
 
 gold = current_dir + '/jsons/' + gold_annotations
 predicted = current_dir + '/jsons/' + bert_output
@@ -155,11 +156,14 @@ for rel_type in list(final_dict.keys()):
         print('{} only has {} row'.format(rel_type, len(final_dict[rel_type])))
 
 #print tables
+sys.stdout = open('stats_predictions_relations.txt', 'w')
 
 for rel_type in list(final_dict.keys()):
 
     data = final_dict[rel_type]
     left = ['Gold', 'True Pos', 'False Pos']
+
+    
     print('                                         ')
     head = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 
@@ -172,7 +176,7 @@ for rel_type in list(final_dict.keys()):
     print('-----------------------------------------')
     print('                                         ')
 
-
+sys.stdout.close()
 #make true and false positive multi parent counts
 #so now should have totals list that is all the relation types for multi parent edus
 # tru_multi_counts = defaultdict(list)
