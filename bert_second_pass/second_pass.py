@@ -12,9 +12,9 @@ save_path = current_folder + '/json_out/'
 
 
 # games = 'bert_multi_preds_30.json'
-games = 'TEST_30_bert.json'
+games = 'bert_multi_preds_30_katelinear.json'
 
-new_games = 'TEST_30_second_pass_noarch.json'
+new_games = 'bert_multi_preds_30_second_pass.json'
 
 gold_test = 'TEST_30_bert.json'
 
@@ -64,6 +64,15 @@ with open(open_path + games, 'r') as jf:
                 edu['type'] = 1
             #add field for incoming result information
             edu['res'] = 0
+        
+        #add edu in turn index to architect edus
+        cnt = 0
+        for edu in edus:
+            if edu['speaker'] == 'Architect':
+                edu['turn_ind'] = cnt
+                cnt += 1
+            elif edu['speaker'] == 'Builder':
+                cnt = 0
 
         #add incoming Result information
         for rel in rels:

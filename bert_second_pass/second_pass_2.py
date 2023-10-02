@@ -14,24 +14,9 @@ open_path = current_folder + '/json_out/'
 save_path = current_folder + '/json_out/'
 
 # games = 'bert_multi_preds_30.json'
-games = 'multi_preds_30_second_pass.json'
+games = 'bert_multi_preds_30_second_pass.json'
 
-new_games = 'multi_preds_30_second_pass_archonly.json'
-
-
-def format_preds(preds_file):
-    """
-    if bert output, need to change relations field
-    """
-    for game in preds_file:
-        new_rels = []
-        rels = game['pred_relations']
-        for rel in rels:
-            rel['x'] = int(rel['x'])
-            rel['y'] = int(rel['y'])
-            new_rels.append(rel)
-        game['relations'] = new_rels
-    return preds_file
+new_games = 'bert_multi_preds_30_second_pass_archonlyedus3.json'
 
 with open(open_path + games, 'r') as jf:
     jfile = json.load(jf)
@@ -45,8 +30,14 @@ with open(open_path + games, 'r') as jf:
         #         edu['tmp_index'] = cnt
         #         new_edus.append(edu)
         #     cnt += 1
+        # for edu in edus:
+        #     if edu['speaker'] == 'Architect':
+        #         edu['tmp_index'] = cnt
+        #         new_edus.append(edu)
+        #     cnt += 1
+        #!!NOW make it about the first three edus
         for edu in edus:
-            if edu['speaker'] == 'Architect':
+            if edu['speaker'] == 'Architect' and edu['turn_ind'] < 4:
                 edu['tmp_index'] = cnt
                 new_edus.append(edu)
             cnt += 1
@@ -57,18 +48,17 @@ with open(open_path + games, 'r') as jf:
             index_dict[edu['tmp_index']] = i
         rels = game['relations'] 
         new_rels = []
-        try:
-            for rel in rels:
+        for rel in rels:
+            try:
                 new_rel = {}
                 new_rel['x'] = index_dict[rel['x']]
                 new_rel['y'] = index_dict[rel['y']]
                 new_rel['type'] = rel['type']
                 new_rels.append(new_rel)
-        except KeyError:
-            print('Key error in game {}'.format(game['id']))
-            continue
+            except KeyError:
+                print('Key error in game {}'.format(game['id']))
+                continue
             
-        
         game['edus'] = new_edus
         game['relations'] = new_rels
 

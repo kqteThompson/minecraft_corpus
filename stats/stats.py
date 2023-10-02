@@ -19,6 +19,7 @@ arg_parser.add_argument("--undersample", type=int, nargs='+', help='specify numb
 arg_parser.add_argument("--longest_rels", type=int, nargs=1, help='returns a list of relation types with len >= num')
 arg_parser.add_argument("--edu_types", default=False, action='store_true', help='returns a list of relation types edu type breakdown')
 arg_parser.add_argument("--multiparents", default=False, action='store_true', help='rel types for >1 parent edus')
+arg_parser.add_argument("--narrations", default=False, action='store_true', help='asdfsdf')
 
 arg_parser.add_argument("--prep_outputs", default=False, action='store_true', help='changes field names on bert output')
 arg_parser.add_argument("--save_name", type=str, nargs='+', help='specify new file name')
@@ -46,6 +47,8 @@ if args.games:
     #count number of games
     num_games = relations_stats.num_games(data)
     print('{} games'.format(num_games))
+if args.narrations:
+    relations_stats.narrations(data)
 if args.relations:
     #return relation stats 
     #number of relations

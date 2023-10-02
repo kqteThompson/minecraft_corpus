@@ -115,6 +115,48 @@ def edu_types_by_relation(data):
     sys.stdout.close()
     return None
 
+def narrations(data):
+    "find turn patterns between narrations"
+    #for narration, take endpoints...take indices, pull all edus between and return pattern
+    all_patterns = []
+    for game in data:
+        narrs = [[r['x'], r['y']] for r in game['relations'] if r['type'] == 'Narration']
+        for end in narrs:
+            edus = game['edus'][end[0]:end[1]+1]
+            #find turn pattern
+            pattern = []
+            last = None
+            for edu in edus:
+                if is_nl(edu['text']):
+                    speaker = 'Sys'
+                else:
+                    speaker = edu['speaker'][:4]
+                if last != speaker:
+                    pattern.append(speaker)
+                    last = speaker
+            all_patterns.append(tuple(pattern))
+
+    print('Total narration patterns counted : {}'.format(len(all_patterns)))
+    print('Num different patterns : {}'.format(len(list(set(all_patterns)))))
+
+    #once you have all patterns, count them
+    cnts = Counter(all_patterns)
+    cntslist = list(cnts.items())
+    cntslist.sort(key=lambda x:x[1], reverse=True)
+
+    sys.stdout = open('narr_patterns.txt', 'w')
+
+    for c in cntslist:
+        print('X {}'.format(c[1]))
+        print(" -- ".join([p for p in c[0]]))
+        print('                       ')
+        print('-----------------------')
+
+
+    sys.stdout.close()
+        
+    return None
+
 def relations(data, maxlen):
     cutoff = maxlen[0]
     rels_all = defaultdict(list)
