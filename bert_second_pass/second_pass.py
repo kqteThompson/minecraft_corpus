@@ -1,5 +1,7 @@
 """
-adds info to edus.
+adds info to edus that is necessary for more second pass (Narration) processing.
+info: global turn, architect edu index in turn, 1/0 result incoming, edu type
+returns only narration relations. 
 """
 import os 
 import json 
@@ -12,11 +14,11 @@ save_path = current_folder + '/json_out/'
 
 
 # games = 'bert_multi_preds_30.json'
-games = 'bert_multi_preds_30_katelinear.json'
+games = 'TRAIN_314_bert.json'
 
-new_games = 'bert_multi_preds_30_second_pass.json'
+new_games = 'TRAIN_314_bert_2p1.json'
 
-gold_test = 'TEST_30_bert.json'
+gold_test = 'TRAIN_314_bert.json'
 
 def contains_number(string):
     return any(char.isdigit() for char in string)
@@ -56,23 +58,34 @@ with open(open_path + games, 'r') as jf:
         rels = game['relations']
         edus = game['edus']
         new_rels = []
-        #add type information
+        
+        #add turn index for arch and global turn info to all edus
+        ind_cnt = 0
+        global_cnt = 0
+        last_speaker = None
+        global_index = 0
         for edu in edus:
+            edu['global_index'] = global_index
+            global_index += 1
+            speaker = edu['speaker']
+            if speaker == last_speaker:
+                edu['turn'] = global_cnt
+            else:
+                last_speaker = speaker
+                global_cnt += 1
+                edu['turn'] = global_cnt
+            if speaker == 'Architect':
+                edu['turn_ind'] = ind_cnt
+                ind_cnt += 1
+            elif speaker == 'Builder':
+                ind_cnt = 0
+            #also add type info
             if is_nl(edu['text']):
                 edu['type'] = 0
             else:
                 edu['type'] = 1
             #add field for incoming result information
             edu['res'] = 0
-        
-        #add edu in turn index to architect edus
-        cnt = 0
-        for edu in edus:
-            if edu['speaker'] == 'Architect':
-                edu['turn_ind'] = cnt
-                cnt += 1
-            elif edu['speaker'] == 'Builder':
-                cnt = 0
 
         #add incoming Result information
         for rel in rels:
@@ -82,8 +95,7 @@ with open(open_path + games, 'r') as jf:
             
             #keep only Narration relations
             if rel['type'] == 'Narration':
-                new_rels.append(rel) 
-        
+                new_rels.append(rel)         
         game['relations'] = new_rels
 
 if 'preds' in games:
