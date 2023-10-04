@@ -13,10 +13,14 @@ current_folder=os.getcwd()
 open_path = current_folder + '/json_out/'
 save_path = current_folder + '/pickle_out/'
 
+#running on training data:
+# games = 'TRAIN_314_bert_2p1.json'
+# games_save = 'TRAIN_314_bert_2p1.pck'
 
-games = 'TRAIN_314_bert_2p1.json'
 
-games_save = 'TRAIN_314_bert_2p1.pck'
+#running on linear outputs:
+games = 'bert_multi_preds_30_second_pass.json'
+games_save = 'bert_multi_preds_2p1.pck'
 
 
 final_candidates =  []
@@ -57,31 +61,32 @@ def get_turns(edus):
                 continue
     return turn_dict
 
-def format_preds(preds_file):
-    """
-    if bert output, need to change relations field
-    """
-    for game in preds_file:
-        new_rels = []
-        rels = game['pred_relations']
-        for rel in rels:
-            rel['x'] = int(rel['x'])
-            rel['y'] = int(rel['y'])
-            new_rels.append(rel)
-        game['relations'] = new_rels
-    return preds_file
+# def format_preds(preds_file):
+#     """
+#     if bert output, need to change relations field
+#     """
+#     for game in preds_file:
+#         new_rels = []
+#         rels = game['pred_relations']
+#         for rel in rels:
+#             rel['x'] = int(rel['x'])
+#             rel['y'] = int(rel['y'])
+#             new_rels.append(rel)
+#         game['relations'] = new_rels
+#     return preds_file
 
 MAX_LEN = 16
 
 with open(open_path + games, 'r') as jf:
     jfile = json.load(jf)
-    if 'preds' in games:
-        jfile = format_preds(jfile)
+    # if 'preds' in games:
+    #     jfile = format_preds(jfile)
     
 
     labels = []
     raw = []
     input_text = []
+
 
     for game_ind, game in enumerate(jfile):
 
@@ -114,7 +119,7 @@ with open(open_path + games, 'r') as jf:
                 avoid = turns[edu['turn']]
             for target in [elem for elem in archs if elem['turn'] > num and elem['turn'] not in avoid]:
                 cand = [game_ind, edu['global_index'], target['global_index'], 0, -1, edu['res'], edu['res']]
-                if (cand[1], cand[2]) in rels:
+                if (cand[1], cand[2]) in rels: ##NB need to figure out how to find rels that arent captured
                     cand[3] = 1
                     cand[4] = 14
                 game_cands.append(cand)

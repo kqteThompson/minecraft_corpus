@@ -14,11 +14,11 @@ save_path = current_folder + '/json_out/'
 
 
 # games = 'bert_multi_preds_30.json'
-games = 'TRAIN_314_bert.json'
+games = 'bert_multi_preds_30_katelinear.json'
 
-new_games = 'TRAIN_314_bert_2p1.json'
+new_games = 'bert_multi_preds_30_second_pass.json'
 
-gold_test = 'TRAIN_314_bert.json'
+gold_test = 'TEST_30_bert.json'
 
 def contains_number(string):
     return any(char.isdigit() for char in string)
