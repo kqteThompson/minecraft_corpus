@@ -12,11 +12,13 @@ current_folder=os.getcwd()
 open_path = current_folder + '/json_in/'
 save_path = current_folder + '/json_out/'
 
+REL_TYPE = 'Correction'
 
-# games = 'bert_multi_preds_30.json'
 games = 'bert_multi_preds_30_katelinear.json'
+# games = 'TRAIN_314_bert.json'
 
-new_games = 'bert_multi_preds_30_second_pass.json'
+new_games = 'bert_multi_preds_30_2p2.json'
+# new_games = 'TRAIN_314_bert_2p2.json'
 
 gold_test = 'TEST_30_bert.json'
 
@@ -93,8 +95,8 @@ with open(open_path + games, 'r') as jf:
                 ind = rel['y']
                 edus[ind]['res'] = 1
             
-            #keep only Narration relations
-            if rel['type'] == 'Narration':
+            #keep only specified type of relations
+            if rel['type'] == REL_TYPE:
                 new_rels.append(rel)         
         game['relations'] = new_rels
 
@@ -104,7 +106,7 @@ if 'preds' in games:
         goldfile = json.load(jf)
     narr_dict = {}
     for gg in goldfile:
-        narr_dict[gg['id']]=[rel for rel in gg['relations'] if rel['type'] == 'Narration']
+        narr_dict[gg['id']]=[rel for rel in gg['relations'] if rel['type'] ==  REL_TYPE]
     gold_rels = []
     for g in jfile:
         g['relations'] = narr_dict[g['id']]
