@@ -56,7 +56,7 @@ def is_nl(edu):
     words = edu.split(' ')
     # print(words)
     for word in [w for w in words if w != '']:
-        if not contains_number(word):
+        if not contains_number(word) or not len(word) == 5:
             nl = 0
             break
     return nl

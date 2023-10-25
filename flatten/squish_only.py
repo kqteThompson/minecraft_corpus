@@ -131,7 +131,8 @@ def text_replace_embeddings_full(text):
     [Builder puts down a green block at X:-3 Y:1 Z:-1]
     """
     if embed == 'SKP':
-        replacement = 'SKIP '
+        # replacement = 'SKIP '
+        replacement = ''
     else:
         if 'puts' in text:
             replacement = ['1', c, embed, ' ']
@@ -147,7 +148,7 @@ def squish_text(elements):
     return squished 
 
 # for f in json_files:
-for f in [s for s in json_files if s == 'TEST_2023-09-13.json']:
+for f in [s for s in json_files if s == 'SILVER_2023-10-13.json']:
     linguistic_cdus = [] # a list of the uncaught linguistic CDUs
     with open(open_path + f, 'r') as jf:
         jfile = json.load(jf)

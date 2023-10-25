@@ -27,8 +27,8 @@ games_pass = []
 
 folder_array = os.listdir(games_path) 
 
-for f in folder_array:
-# for f in [s for s in folder_array if s == 'SILVER_2023-06-29.json']:
+# for f in folder_array:
+for f in [s for s in folder_array if s == 'SILVER_2023-10-13.json']:
     print("Checking  " + f)
     print('------------')
     with open(games_path + f, 'r') as j:

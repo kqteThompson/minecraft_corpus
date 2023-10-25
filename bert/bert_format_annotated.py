@@ -19,7 +19,7 @@ json_files = os.listdir(open_path)
 
 with_relations = 1
 builder_names_replace = 1
-annotation_level = 'BRONZE_FLAT'
+annotation_level = 'SILVER_FLAT'
 
 for f in json_files:
     output_list = []
