@@ -8,14 +8,14 @@ use this script as a way to locate problematic relations
 
 current_dir = os.getcwd()
 ##try to open json file and check turns 
-gold_annotations = '2023-10-FLAT.json'
+annotations = 'DEV_32_bert.json'
 gold = '/home/kate/minecraft_corpus/glozz_to_json/json_output/SILVER_2023-10-13.json'
 # gold_annotations = 'TEST_30_bert.json'
 # gold_annotations = 'TRAIN_314_bert.json'
 
 
 
-# gold = current_dir + '/jsons/' + gold_annotations
+gold = current_dir + '/jsons/' + annotations
 
 try:
     with open(gold, 'r') as f: 
@@ -40,15 +40,15 @@ def is_nl(edu):
             break
     return nl
 
-eeus = 0
-for game in gold_data:
-    # id = game['id']
-    edus = game['edus']
-    for edu in edus:
-        if edu['Speaker'] == 'System':
-            eeus += 1
+# eeus = 0
+# for game in gold_data:
+#     # id = game['id']
+#     edus = game['edus']
+#     for edu in edus:
+#         if edu['Speaker'] == 'System':
+#             eeus += 1
 
-print(eeus)
+# print(eeus)
 
 
 
@@ -64,40 +64,40 @@ print(eeus)
     #         print('-----------------------')
 
 # #find bad backwards links
-# sys.stdout = open('bad_backwards.txt', 'w')
+# # sys.stdout = open('bad_backwards.txt', 'w')
 # count = 1
 # for game in gold_data:
 #     id = game['id']
 #     rels = game['relations']
 #     for rel in rels:
-#         if rel['type'] not in ['Comment', 'Conditional']:
+#         if rel['type'] in ['Elaboration', 'Question-answer_pair']:
 #             if rel['y'] < rel['x']:
 #                 edu = game['edus'][rel['y']]
 #                 print('{}. game {}, rel type {}, speaker: {}, text: {} '.format(count, id, rel['type'], edu['speaker'], edu['text']))
 #                 print('X: {}'.format(game['edus'][rel['x']]))
 #                 count += 1
 #                 print('-----------------------')
-# sys.stdout.close()
+# # sys.stdout.close()
 
 
-# # find narrations that are not NL-NL
-# for game in gold_data:
-#     id = game['id']
-#     edus = game['edus']
+# find narrations that are not NL-NL
+for game in gold_data:
+    id = game['id']
+    edus = game['edus']
     
-#     edu_types = []
-#     for edu in edus:
-#         if edu['speaker'] == 'Builder' and is_nl(edu['text']):
-#             edu_types.append(0)
-#         else:
-#             edu_types.append(1)
-#     for rel in game['relations']:
-#         if rel['type'] == 'Narration':
-#             if edu_types[rel['x']] == 0 or edu_types[rel['y']] == 0:
-#                 print('{} game,  NL Narration edu'.format(id))
-#                 print('X : {}'.format(edus[rel['x']]))
-#                 print('Y : {}'.format(edus[rel['y']]))
-#                 print('-----------------------------------')
+    edu_types = []
+    for edu in edus:
+        if edu['speaker'] == 'Builder' and is_nl(edu['text']):
+            edu_types.append(0)
+        else:
+            edu_types.append(1)
+    for rel in game['relations']:
+        if rel['type'] in ['Correction']:
+            if edu_types[rel['x']] == 1 and edu_types[rel['y']] == 0:
+                print('{} game,  {} edu'.format(id, rel['type']))
+                print('X : {}'.format(edus[rel['x']]))
+                print('Y : {}'.format(edus[rel['y']]))
+                print('-----------------------------------')
 
 # find narrations that are not NL-NL
 
