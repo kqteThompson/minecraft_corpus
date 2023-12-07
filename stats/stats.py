@@ -20,6 +20,7 @@ arg_parser.add_argument("--longest_rels", type=int, nargs=1, help='returns a lis
 arg_parser.add_argument("--edu_types", default=False, action='store_true', help='returns a list of relation types edu type breakdown')
 arg_parser.add_argument("--multiparents", default=False, action='store_true', help='rel types for >1 parent edus')
 arg_parser.add_argument("--narrations", default=False, action='store_true', help='asdfsdf')
+arg_parser.add_argument("--last", default=False, action='store_true', help='scores for last')
 
 arg_parser.add_argument("--prep_outputs", default=False, action='store_true', help='changes field names on bert output')
 arg_parser.add_argument("--save_name", type=str, nargs='+', help='specify new file name')
@@ -67,6 +68,11 @@ if args.candidates:
         relations_stats.candidates(data, args.num)
     else:
         relations_stats.candidates(data)
+if args.last:
+    if args.num:
+        relations_stats.last(data, args.num)
+    else:
+        relations_stats.last(data)
 if args.longest_rels:
     relations_stats.find_longest_rels(data, args.longest_rels)
 if args.edu_types:

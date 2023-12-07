@@ -20,7 +20,7 @@ ac_path = current_folder + '/ac_files/'
 # aa_path = current_folder + '/aa_files/'
 # aa_path = current_folder + '/test_aa_files/'
 # aa_path = current_folder + '/all_aa/'
-aa_path = '/home/kate/glozz_platform/glozz-platform-dist-2.1/minecraft_data/dev_set/'
+aa_path = '/home/kate/glozz_platform/glozz-platform-dist-2.1/minecraft_data/annotations/'
 
 save_path= current_folder + '/json_output/'
 

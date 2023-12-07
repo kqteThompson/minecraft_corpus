@@ -7,6 +7,7 @@ import pandas
 import numpy 
 import matplotlib.pyplot as plt
 import sys
+from sklearn.metrics import precision_recall_fscore_support
 
 #number of games
 #number of turns
@@ -371,5 +372,31 @@ def rels_within_cutoff(data, length):
         for rel in d['relations']:
             totals[rel['type']].append(abs(rel['x']-rel['y']))
 
+    return None
+
+def last(data, maxlen):
+    cutoff = maxlen[0]
+    flat_last = []
+    flat_gold = []
+    for game in data:
+        #make last
+        last = [(i, i+1) for i in range(len(game['edus']) - 1)]
+        #get all rels
+        rels = [(r['x'], r['y']) for r in game['relations'] if (r['y'] > r['x'] and (r['y'] - r['x']) <= cutoff)]
+        #merge lists
+        for l in last:
+            flat_last.append(1)
+            if l in rels:
+                flat_gold.append(1)
+            else:
+                flat_gold.append(0)
+        for r in rels:
+            if r not in last:
+                flat_gold.append(1)
+                flat_last.append(0)
+    
+    #check F1 scores
+    scores = precision_recall_fscore_support(flat_gold, flat_last, average='binary')
+    print('Precision : {}, Recall : {}, F1 binary : {}'.format(scores[0], scores[1], scores[2]))
     return None
     
