@@ -5,7 +5,7 @@ import json
 
 current_folder=os.getcwd()
 
-corpus_path = current_folder + '/dev_bert_all.json'
+corpus_path = current_folder + '/jsons/TEST_100_bert.json'
 
 print_list = []
 
@@ -38,7 +38,7 @@ for corr in all_corrections:
 # print_string = '\n'.join(all_corrections)
     
 
-with open (current_folder+ '/dev_corrections.txt', 'w') as txt_file:
+with open (current_folder+ '/test_corrections.txt', 'w') as txt_file:
     txt_file.write(print_string)
 
 print('corrections saved')

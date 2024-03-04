@@ -148,7 +148,7 @@ def squish_text(elements):
     return squished 
 
 # for f in json_files:
-for f in [s for s in json_files if s == 'SILVER_2024-03-02.json']:
+for f in [s for s in json_files if s == 'SILVER_2024-03-04.json']:
     linguistic_cdus = [] # a list of the uncaught linguistic CDUs
     with open(open_path + f, 'r') as jf:
         jfile = json.load(jf)
@@ -176,65 +176,67 @@ for f in [s for s in json_files if s == 'SILVER_2024-03-02.json']:
             #STEP 1: pull elements from each CDU 
             edus = [(e['unit_id'], e['start_pos'], e['Speaker'], e['text']) for e in game['edus']]
             cdus = game['cdus']
+            cdu_ids = [cdu['schema_id'] for cdu in cdus]
+            edu_pos = {e['unit_id'] : e['start_pos'] for e in game['edus']}
             
             for cdu in cdus:
                 cid = cdu['schema_id']
                 elements = [elem for elem in edus if elem[0] in cdu['embedded_units']]
+                element_ends = {elem[1]: elem[0] for elem in elements}
+
+                #STEP 2: get a list of the outgoing links 
+                outgoing_links = defaultdict(list)
+                #use default dict for cases where more than one target per relation
+                for rel in game['relations']:
+                    outgoing_links[rel['x_id']].append(rel['y_id'])
                 
-                #STEP 2: check CDU components are all builder moves
-                if cdu_contents(elements):
+                #STEP 3: determin where the last position should be for the squished CDU
+                #if there is an outgoing relation in the cdu, make the element position just above that the last one
+                
+                
+                if cid in outgoing_links.keys():
+                    print(cid)
+                    target_list = []
+                    for target in [o for o in outgoing_links[cid] if o not in cdu_ids]:
+                        #this looks at only outgoing links that are to edus, not to another CDU
+                        # print('cdu with outgoing rel')
+                        #find the min pos and make that the last position for the edu
+                        target_list.append(edu_pos[target])
+                        #need to find the EDU id that belongs to the EDU just before tail position
+                        #using a list of end positions of the cdu elements
+                    if len(target_list) > 0:
+                        tail_position = min(target_list)
+                        # print(tail_position)
+                        # print(element_ends.keys())
+                        dus_above = [k for k in element_ends.keys() if k < tail_position]
+                        max_du_above = max(dus_above)
+                        tail = element_ends[max_du_above]
+                    else:
+                        last = max(elements, key=lambda tup: tup[1])
+                        tail = last[0]
+                        tail_position = last[1] 
+                else: 
+                        # #do something here for the squish part
+                        # cdu_outgoing[target] = (int(tail_position), pos + counter)
+                        # counter += 1
+                    # print('no outgoing rel go to last')
                     last = max(elements, key=lambda tup: tup[1])
                     tail = last[0]
-                    tail_position = last[1] #record this to move position of danglers
-                    #STEP 2.1: map cid to tail id in replacements dict
-                    replacements[cid] = tail
-
-                    #STEP 2.2: check if any of the elements has outgoing links (assume no incoming)
-                    #these are "danglers"
-                    outgoing_links = defaultdict(list)
-                    #use default dict for cases where more than one dangler per edu
-                    for rel in game['relations']:
-                        outgoing_links[rel['x_id']].append(rel['y_id'])
-
-                    pos = int(tail_position)
-                    counter = 1
-                    for e in elements:
-                        if e[0] in outgoing_links.keys(): 
-                            for target in outgoing_links[e[0]]:
-                                targets[target] = pos + counter
-                                counter += 1
-                            #for any danglers, 
-                            #change the target edu positions (to be just below)
-                            #then save mapping x node of link to tail in replacements
-                            replacements[e[0]] = tail
-
-                    #make sure all outgoing links from a CDU itself 
-                    # which are WITHIN the CDU
-                    # are moved to the bottom of the action block
-
-                    if cid in outgoing_links.keys():
-                        for target in outgoing_links[cid]:
-                            cdu_outgoing[target] = (int(tail_position), pos + counter)
-                            counter += 1
+                    tail_position = last[1] 
+                    
+                #STEP 4: map cid to tail id in replacements dict
+                # print('tail : ', tail )
+                replacements[cid] = tail
                         
-                    #STEP 2.3: then move all text to tail node and 
-                    # put other other edu elements in array to delete
-                    new_tail_text = squish_text(elements)
-                    squish[tail] = new_tail_text
-                    for e in elements:
-                        if e[0] != tail:
-                            redundant.append(e[0]) 
-                #STEP 3: if not components builder moves:
-                else:
-                    #we don't want any linguistic CDUs so flag these!!
-                    linguistic_cdus.append(game['game_id'])
-                    print("LINGUISTIC CDU FOUND in game {}, CDU {}".format(game['game_id'], cid))
-                    first = min(elements, key=lambda tup: tup[1])
-                    head = first[0]
-                    #STEP 3.1: map cid to head id in replacements dict
-                    replacements[cid] = head
+                #STEP 5: then move all text to tail node and 
+                # put other other edu elements in array to delete
+                new_tail_text = squish_text(elements)
+                squish[tail] = new_tail_text
+                for e in elements:
+                    if e[0] != tail:
+                        redundant.append(e[0]) 
 
-            #STEP 4: once we have all replacements, replace ids in relation nodes
+            #STEP 6: once we have all replacements, replace ids in relation nodes
             for rel in game['relations']:
                 if rel['x_id'] in replacements:
                     rel['x_id'] = replacements[rel['x_id']]
@@ -247,21 +249,21 @@ for f in [s for s in json_files if s == 'SILVER_2024-03-02.json']:
                 if edu['unit_id'] in squish.keys():
                     edu['text'] = squish[edu['unit_id']]
                     new_edus.append(edu)
-                elif edu['unit_id'] in redundant:
-                    continue
-                elif edu['unit_id'] in targets.keys():
-                    edu['start_pos'] = targets[edu['unit_id']]
+                elif edu['unit_id'] not in redundant:
                     new_edus.append(edu)
-                elif edu['unit_id'] in cdu_outgoing.keys():
-                    #check that the unit is "within" CDU 
-                    #and if so change position of the edu
-                    if edu['end_pos'] <= cdu_outgoing[edu['unit_id']][0]:
-                        edu['start_pos'] = cdu_outgoing[edu['unit_id']][1]
-                        #record the target so that we can have a record of which CDUs got squished
-                        squish_record[game['game_id']].append((edu['Speaker'], edu['text'], edu['unit_id']))
-                    new_edus.append(edu)
-                else:
-                    new_edus.append(edu)
+                # elif edu['unit_id'] in targets.keys():
+                #     edu['start_pos'] = targets[edu['unit_id']]
+                #     new_edus.append(edu)
+                # elif edu['unit_id'] in cdu_outgoing.keys():
+                #     #check that the unit is "within" CDU 
+                #     #and if so change position of the edu
+                #     if edu['end_pos'] <= cdu_outgoing[edu['unit_id']][0]:
+                #         edu['start_pos'] = cdu_outgoing[edu['unit_id']][1]
+                #         #record the target so that we can have a record of which CDUs got squished
+                #         squish_record[game['game_id']].append((edu['Speaker'], edu['text'], edu['unit_id']))
+                #     new_edus.append(edu)
+                # else:
+                #     new_edus.append(edu)
 
             #replace edus field
             game['edus'] = new_edus

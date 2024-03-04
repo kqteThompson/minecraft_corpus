@@ -9,8 +9,8 @@ import datetime
 
 current_folder=os.getcwd()
 
-open_path = current_folder + '/json_in/'
-#open_path = '/home/kate/minecraft_corpus/flatten/json_flat/'
+# open_path = current_folder + '/json_in/'
+open_path = '/home/kate/minecraft_corpus/flatten/json_flat/'
 
 # save_path= current_folder + '/json_out/'
 save_path= current_folder + '/json_out/'
