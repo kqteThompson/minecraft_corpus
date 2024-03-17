@@ -124,6 +124,7 @@ def text_replace_embeddings_full(text):
     color = re.findall(r"\b({})\b".format('|'.join(colors)), text, flags=re.IGNORECASE)
     c = color[0][0]
     coords = text.split('at')[1].strip(']').strip().split(' ')
+    print('COORDS', coords)
     embed = get_bert_token(coords)
     if len(embed) != 3:
         print('{} not len 3'.format(coords))
@@ -148,7 +149,7 @@ def squish_text(elements):
     return squished 
 
 # for f in json_files:
-for f in [s for s in json_files if s == 'SILVER_2024-03-04.json']:
+for f in [s for s in json_files if s == 'SILVER_2024-03-17.json']:
     linguistic_cdus = [] # a list of the uncaught linguistic CDUs
     with open(open_path + f, 'r') as jf:
         jfile = json.load(jf)
@@ -164,7 +165,7 @@ for f in [s for s in json_files if s == 'SILVER_2024-03-04.json']:
             for edu in game['edus']:
                 if edu['Speaker'] == 'System':
                     #new_text = text_replace_coords(edu['text']) 
-                    # print(edu['text'])
+                    print("EDU text", edu['text'])
                     # print(edu['unit_id'])
                     new_text = text_replace_embeddings_full(edu['text'])
                     edu['text'] = new_text

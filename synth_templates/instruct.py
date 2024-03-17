@@ -2,6 +2,10 @@ import os
 import json
 from collections import defaultdict
 
+"""
+look at first instructions to get an idea for templates
+"""
+
 def is_nl(edu):
     """
     if every word in alphanumeric and has len 5
@@ -39,19 +43,17 @@ def decode(tok_str):
 
 current_folder=os.getcwd()
 
-corpus_path = current_folder + '/TRAIN_303_bert.json'
+corpus_path = current_folder + '/DEV_32_bert.json'
 
 with open(corpus_path, 'r') as j:
     jfile = json.load(j)
     games = jfile
-    prompt_snippets = []
 
-    total_snippets = 0
-    total_corrections = 0
 
-    for game in games[:3]:
-        # if game['id'] in ['C120-B53-A4', 'C87-B25-A10', 'C49-B52-A27', 'C50-B15-A27', 'C157-B11-A7']:
-            # text_list.append(game['id'])
+    instructions = []
+
+    for game in games:
+            ##STEP 1
             print(game['id'])
             game_id = game['id']
             text_list = []
@@ -62,24 +64,26 @@ with open(corpus_path, 'r') as j:
             #for list in edus list, add to text list :
             # 0. <Speaker> [0 Ack], text
             #see how this looks then figure out how to separate narrations
-            edu_list = [[edu['speaker'], [], edu['text']] for edu in game['edus']]
+            edu_list = [[edu['speaker'], edu['text'],[]] for edu in game['edus']]
             for rel in game['relations']:
-                if rel['type'] in ['Narration', 'Correction', 'Continuation', 'Result']: ##!! Just look at Corrections
-                    edu_list[rel['y']][1].append([rel['x'], rel['type']])
+                # if rel['type'] in ['Narration', 'Correction', 'Continuation', 'Result']: ##!! Just look at Corrections
+                    edu_list[rel['y']][2].append([rel['x'], rel['type']])
             for i, item in enumerate(edu_list):
                 item_string = str(i) + ' <' + item[0] + '> ' 
-                for inc_rel in item[1]:
-                    item_string += '$$[' + str(inc_rel[0]) + ',' + inc_rel[1] + ']$$ '
                 ##check for NL moves
-                if item[0] == 'Builder' and is_nl(item[2]):
-                    item_string += decode(item[2])
+                if item[0] == 'Builder' and is_nl(item[1]):
+                    item_string += decode(item[1])
                 else:
-                    item_string += item[2]
-                item
+                    item_string += item[1]
+                ##add relations
+                if len(item[2]) > 0:
+                    item_string += '$$'
+                for inc_rel in item[2]:
+                    item_string += '[' + str(inc_rel[0]) + ',' + inc_rel[1] + '] '
                 text_list.append(item_string)
 
             #now want to separate by Narrations. 
-            narrations_dict = {}
+            narrations_dict = {} #json2
             narr_no = 0
             # narrations_list = []
             narrations_list = []
@@ -93,49 +97,36 @@ with open(corpus_path, 'r') as j:
                     narrations_list.append(line)
             
             # print(narrations_dict.keys())
-            #STEP 2: remove anything that is not correction and remove snippets that do not contain moves
+            # STEP 2: for each narration, find first instruction.
+            
             for key in sorted(narrations_dict.keys()):
                 snip = narrations_dict[key]
-                no_snip = 1
-                corr = 0
                 for s in snip: 
                     if '|put' in s or '|remove' in s:
-                        no_snip = 0
-                    if ',Correction' in s:
-                        corr = 1
-                if no_snip:
-                    pass
-                elif corr:
-                    total_corrections += 1
-                    total_snippets += 1
-                    prompt_snippets.append('----' + game_id + '_' + str(key) + '_CORRECTION' + '----')
-                    for s in snip:
-                        if ',Correction' in s:
-                            prompt_snippets.append(s)
-                        else:
-                            if '$$' in s:
-                                ss = s.split('$$')
-                                new_s = ss[0] + ss[-1]
-                                prompt_snippets.append(new_s)
-                            else:
-                                prompt_snippets.append(s)
-                else:
-                    total_snippets += 1
-                    prompt_snippets.append('----' + game_id + '_' + str(key) + '----')
-                    for s in snip:
-                        if '$$' in s:
-                            ss = s.split('$$')
-                            new_s = ss[0] + ss[-1]
-                            prompt_snippets.append(new_s)
-                        else:
-                            prompt_snippets.append(s)
-        
-            # for t in narrations_list:
-            #     print(t)
-    print_string = '\n'.join(prompt_snippets)
-    with open (current_folder+ '/akshay.txt', 'w') as txt_file:
+                        instructions.append('\n')
+                        break
+                    else:
+                        instructions.append(s)
+                   
+              
+    """
+    NB:
+    For this first pass, we take only correction snippets that have 2 move turns and 
+    2 corrections, and non-correction snippets that have 2 move turns, or one move turn 
+    then we add he first move turn of the next consecutive snippet if it is not a
+    correction
+    """
+    # ##to check the intermediate json
+    # print(len(filtered_snippets)) 
+    # print(len([i for i in filtered_snippets if i['corr'] == 1]))                     
+    # with open(current_folder+ '/akshay.json', 'w') as outfile:
+    #     json.dump(filtered_snippets, outfile)
+
+
+
+
+    print_string = '\n'.join(instructions)
+    with open (current_folder+ '/instruct_test.txt', 'w') as txt_file:
         txt_file.write(print_string)
     
-    print('total snippets : ', total_snippets)
-    print('total corrections : ', total_corrections)
 
